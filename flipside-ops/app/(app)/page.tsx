@@ -3,11 +3,15 @@ import { CheckSquare, AlertOctagon, Clock, Briefcase } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardBody } from "@/components/ui/Card";
 import { Pill } from "@/components/ui/Pill";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { RealtimeRefresh } from "@/components/RealtimeRefresh";
+import {
+  TasksNoticesCard,
+  ComingSoonCard,
+} from "@/components/dashboard/TasksNoticesCard";
 import { timeAgo, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -105,6 +109,106 @@ export default async function HomePage() {
     (n) => !(n.dismissed_by ?? []).includes(profile.id),
   );
 
+  const tasksPane =
+    (myTasks ?? []).length === 0 ? (
+      <EmptyState
+        title="No tasks assigned"
+        description="When someone assigns work to you, it'll show here."
+      />
+    ) : (
+      <ul className="divide-y divide-border-soft">
+        {(myTasks ?? []).map((t) => {
+          const overdue = t.due_date && new Date(t.due_date) < new Date();
+          const soon =
+            t.due_date &&
+            !overdue &&
+            new Date(t.due_date).getTime() - Date.now() < 1000 * 60 * 60 * 48;
+          const c = t.linked_client_id ? clientMap.get(t.linked_client_id) : null;
+          return (
+            <li key={t.id}>
+              <Link
+                href={`/tasks/${t.id}`}
+                className="flex items-center gap-3 px-5 py-3 hover:bg-canvas"
+              >
+                <Pill tone={overdue ? "danger" : soon ? "warning" : "neutral"}>
+                  {t.due_date
+                    ? overdue
+                      ? "Overdue"
+                      : soon
+                        ? "Due soon"
+                        : shortDate(t.due_date)
+                    : "No date"}
+                </Pill>
+                <span className="font-medium truncate">{t.title}</span>
+                {c && (
+                  <span className="text-xs text-muted truncate">· {c.name}</span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    );
+
+  const noticesPane =
+    visibleNotices.length === 0 ? (
+      <EmptyState title="Nothing posted" />
+    ) : (
+      <ul className="divide-y divide-border-soft">
+        {visibleNotices.map((n) => (
+          <li key={n.id} className="px-5 py-3">
+            <Link
+              href={`/tasks/${n.id}`}
+              className="font-medium text-ink hover:text-brand-700"
+            >
+              {n.title}
+            </Link>
+            {n.description && (
+              <p className="text-xs text-muted line-clamp-2 mt-0.5">
+                {n.description}
+              </p>
+            )}
+            <p className="text-xs text-muted mt-1">{timeAgo(n.created_at)}</p>
+          </li>
+        ))}
+      </ul>
+    );
+
+  const activityPane =
+    (activity ?? []).length === 0 ? (
+      <EmptyState title="Quiet around here." />
+    ) : (
+      <ul className="divide-y divide-border-soft">
+        {(activity ?? []).map((a) => {
+          const actor = a.actor_id ? actorMap.get(a.actor_id) : null;
+          return (
+            <li
+              key={a.id}
+              className="px-5 py-3 text-sm flex items-start gap-2"
+            >
+              <Pill tone="neutral" className="capitalize">
+                {a.action}
+              </Pill>
+              <div className="min-w-0 flex-1">
+                <div className="truncate">
+                  <strong>{actor?.full_name ?? "Someone"}</strong>{" "}
+                  <span className="text-muted">
+                    {a.action === "create"
+                      ? "added"
+                      : a.action === "update"
+                        ? "edited"
+                        : "deleted"}
+                  </span>{" "}
+                  <em>{a.summary ?? a.entity_type}</em>
+                </div>
+                <div className="text-xs text-muted">{timeAgo(a.created_at)}</div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    );
+
   return (
     <>
       <RealtimeRefresh />
@@ -143,151 +247,26 @@ export default async function HomePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>My tasks</CardTitle>
-              <Link
-                href="/tasks?mine=1"
-                className="text-xs text-brand-700 hover:underline"
-              >
-                View all
-              </Link>
-            </CardHeader>
-            <CardBody className="!p-0">
-              {(myTasks ?? []).length === 0 ? (
-                <EmptyState
-                  title="No tasks assigned"
-                  description="When someone assigns work to you, it'll show here."
-                />
-              ) : (
-                <ul className="divide-y divide-border-soft">
-                  {(myTasks ?? []).map((t) => {
-                    const overdue =
-                      t.due_date && new Date(t.due_date) < new Date();
-                    const soon =
-                      t.due_date &&
-                      !overdue &&
-                      new Date(t.due_date).getTime() - Date.now() <
-                        1000 * 60 * 60 * 48;
-                    const c = t.linked_client_id
-                      ? clientMap.get(t.linked_client_id)
-                      : null;
-                    return (
-                      <li key={t.id}>
-                        <Link
-                          href={`/tasks/${t.id}`}
-                          className="flex items-center gap-3 px-5 py-3 hover:bg-canvas"
-                        >
-                          <Pill
-                            tone={
-                              overdue ? "danger" : soon ? "warning" : "neutral"
-                            }
-                          >
-                            {t.due_date
-                              ? overdue
-                                ? "Overdue"
-                                : soon
-                                  ? "Due soon"
-                                  : shortDate(t.due_date)
-                              : "No date"}
-                          </Pill>
-                          <span className="font-medium truncate">{t.title}</span>
-                          {c && (
-                            <span className="text-xs text-muted truncate">
-                              · {c.name}
-                            </span>
-                          )}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardBody>
-          </Card>
+          <TasksNoticesCard
+            tasksPane={tasksPane}
+            noticesPane={noticesPane}
+            activityPane={activityPane}
+          />
         </div>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notices</CardTitle>
-              <Link
-                href="/tasks?tab=notice"
-                className="text-xs text-brand-700 hover:underline"
-              >
-                All notices
-              </Link>
-            </CardHeader>
-            <CardBody className="!p-0">
-              {visibleNotices.length === 0 ? (
-                <EmptyState title="Nothing posted" />
-              ) : (
-                <ul className="divide-y divide-border-soft">
-                  {visibleNotices.map((n) => (
-                    <li key={n.id} className="px-5 py-3">
-                      <Link
-                        href={`/tasks/${n.id}`}
-                        className="font-medium text-ink hover:text-brand-700"
-                      >
-                        {n.title}
-                      </Link>
-                      {n.description && (
-                        <p className="text-xs text-muted line-clamp-2 mt-0.5">
-                          {n.description}
-                        </p>
-                      )}
-                      <p className="text-xs text-muted mt-1">
-                        {timeAgo(n.created_at)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent activity</CardTitle>
-            </CardHeader>
-            <CardBody className="!p-0">
-              {(activity ?? []).length === 0 ? (
-                <EmptyState title="Quiet around here." />
-              ) : (
-                <ul className="divide-y divide-border-soft">
-                  {(activity ?? []).map((a) => {
-                    const actor = a.actor_id ? actorMap.get(a.actor_id) : null;
-                    return (
-                      <li
-                        key={a.id}
-                        className="px-5 py-3 text-sm flex items-start gap-2"
-                      >
-                        <Pill tone="neutral" className="capitalize">
-                          {a.action}
-                        </Pill>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate">
-                            <strong>{actor?.full_name ?? "Someone"}</strong>{" "}
-                            <span className="text-muted">
-                              {a.action === "create"
-                                ? "added"
-                                : a.action === "update"
-                                  ? "edited"
-                                  : "deleted"}
-                            </span>{" "}
-                            <em>{a.summary ?? a.entity_type}</em>
-                          </div>
-                          <div className="text-xs text-muted">
-                            {timeAgo(a.created_at)}
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardBody>
-          </Card>
+          <ComingSoonCard
+            title="Suggestions & Feedback"
+            description="Submit ideas and feedback in a lightweight inbox — coming soon."
+          />
+          <ComingSoonCard
+            title="Training"
+            description="Track training modules and completions per staff member."
+          />
+          <ComingSoonCard
+            title="Polls"
+            description="Quick polls for the team — coming soon."
+          />
         </div>
       </div>
 

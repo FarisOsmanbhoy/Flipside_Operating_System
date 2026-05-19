@@ -10,7 +10,7 @@ import {
   Textarea,
   FieldError,
 } from "@/components/ui/Input";
-import { saveTask, type TaskState } from "@/app/(app)/tasks/actions";
+import { saveTask, type TaskState } from "@/app/(app)/(administration)/tasks/actions";
 import type { Task } from "@/lib/database.types";
 
 type LookupItem = { id: string; name: string | null };

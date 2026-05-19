@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Select } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
-import { setUserRole, setUserActive } from "@/app/(app)/admin/users/actions";
+import { setUserRole, setUserActive } from "@/app/(app)/(administration)/admin/users/actions";
 import type { Profile } from "@/lib/database.types";
 
 export function UserRow({

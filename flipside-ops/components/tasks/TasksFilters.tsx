@@ -5,14 +5,12 @@ import { useTransition } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/format";
 
-export function StaffFilters({
-  departments,
+export function TasksFilters({
   initialQ,
-  initialDept,
+  initialMine,
 }: {
-  departments: { id: string; name: string }[];
   initialQ?: string;
-  initialDept?: string;
+  initialMine?: string;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -22,8 +20,10 @@ export function StaffFilters({
     const next = new URLSearchParams(params.toString());
     if (value) next.set(key, value);
     else next.delete(key);
-    start(() => router.replace(`/staff?${next.toString()}`));
+    start(() => router.replace(`/tasks?${next.toString()}`));
   };
+
+  const mine = initialMine === "1";
 
   return (
     <div className="space-y-5">
@@ -40,7 +40,7 @@ export function StaffFilters({
             type="search"
             defaultValue={initialQ ?? ""}
             onChange={(e) => update("q", e.target.value)}
-            placeholder="Name or email…"
+            placeholder="Title…"
             className="block w-full rounded-lg border border-border-soft bg-surface pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
@@ -48,16 +48,16 @@ export function StaffFilters({
 
       <div>
         <label className="block text-xs font-semibold uppercase text-muted tracking-wide mb-2">
-          Filter by department
+          Assignee
         </label>
         <ul className="space-y-1">
           <li>
             <button
               type="button"
-              onClick={() => update("dept", "")}
+              onClick={() => update("mine", "")}
               className={cn(
                 "w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md text-left",
-                !initialDept
+                !mine
                   ? "bg-brand-50 text-brand-700 font-medium"
                   : "text-ink hover:bg-canvas",
               )}
@@ -65,37 +65,32 @@ export function StaffFilters({
               <span
                 className={cn(
                   "w-2 h-2 rounded-full",
-                  !initialDept ? "bg-brand-500" : "bg-border-soft",
+                  !mine ? "bg-brand-500" : "bg-border-soft",
                 )}
               />
-              All departments
+              All assignees
             </button>
           </li>
-          {departments.map((d) => {
-            const active = initialDept === d.id;
-            return (
-              <li key={d.id}>
-                <button
-                  type="button"
-                  onClick={() => update("dept", d.id)}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md text-left",
-                    active
-                      ? "bg-brand-50 text-brand-700 font-medium"
-                      : "text-ink hover:bg-canvas",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "w-2 h-2 rounded-full",
-                      active ? "bg-brand-500" : "bg-border-soft",
-                    )}
-                  />
-                  {d.name}
-                </button>
-              </li>
-            );
-          })}
+          <li>
+            <button
+              type="button"
+              onClick={() => update("mine", "1")}
+              className={cn(
+                "w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md text-left",
+                mine
+                  ? "bg-brand-50 text-brand-700 font-medium"
+                  : "text-ink hover:bg-canvas",
+              )}
+            >
+              <span
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  mine ? "bg-brand-500" : "bg-border-soft",
+                )}
+              />
+              Assigned to me
+            </button>
+          </li>
         </ul>
       </div>
     </div>

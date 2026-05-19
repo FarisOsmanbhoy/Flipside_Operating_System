@@ -3,7 +3,7 @@
 import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
-import { addComment, type TaskState } from "@/app/(app)/tasks/actions";
+import { addComment, type TaskState } from "@/app/(app)/(administration)/tasks/actions";
 import { timeAgo } from "@/lib/format";
 
 type Comment = {

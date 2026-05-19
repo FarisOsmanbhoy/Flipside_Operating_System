@@ -1,5 +1,7 @@
 import { getSession } from "@/lib/auth";
-import { TopNav } from "@/components/TopNav";
+import { TopHeader } from "@/components/nav/TopHeader";
+import { MainNav } from "@/components/nav/MainNav";
+import { PageShell } from "@/components/nav/PageShell";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export default async function AppLayout({
@@ -12,9 +14,10 @@ export default async function AppLayout({
   return (
     <ToastProvider>
       <div className="min-h-screen flex flex-col">
-        <TopNav profile={profile} />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {children}
+        <TopHeader profile={profile} />
+        <MainNav role={profile.role} />
+        <main className="flex-1">
+          <PageShell>{children}</PageShell>
         </main>
       </div>
     </ToastProvider>

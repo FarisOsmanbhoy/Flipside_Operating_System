@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, Check, X } from "lucide-react";
-import { upsertSectionData } from "@/app/(app)/clients/actions";
+import { upsertSectionData } from "@/app/(app)/(operational)/clients/actions";
 import { useToast } from "@/components/ui/Toast";
 
 type Props = {

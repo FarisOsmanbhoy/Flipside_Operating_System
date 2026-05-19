@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, X } from "lucide-react";
-import { decideChangeRequest } from "@/app/(app)/clients/change-requests/actions";
+import { decideChangeRequest } from "@/app/(app)/(operational)/clients/change-requests/actions";
 import { useToast } from "@/components/ui/Toast";
 
 export function ChangeRequestActions({ id }: { id: string }) {

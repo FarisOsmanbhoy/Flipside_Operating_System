@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { StaffFilters } from "@/components/staff/StaffFilters";
+import { ListPageLayout } from "@/components/layout/ListPageLayout";
 
 export const dynamic = "force-dynamic";
 
@@ -67,8 +68,15 @@ export default async function StaffPage({
         }
       />
 
-      <StaffFilters departments={depts ?? []} initialQ={q} initialDept={dept} />
-
+      <ListPageLayout
+        sidebar={
+          <StaffFilters
+            departments={depts ?? []}
+            initialQ={q}
+            initialDept={dept}
+          />
+        }
+      >
       {filtered.length === 0 ? (
         <Card>
           <EmptyState
@@ -150,6 +158,7 @@ export default async function StaffPage({
           </div>
         </Card>
       )}
+      </ListPageLayout>
     </>
   );
 }

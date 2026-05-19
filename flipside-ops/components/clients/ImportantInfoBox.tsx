@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Pencil, Check, X } from "lucide-react";
 import { useState, useTransition } from "react";
-import { updateClientField } from "@/app/(app)/clients/actions";
+import { updateClientField } from "@/app/(app)/(operational)/clients/actions";
 import { useToast } from "@/components/ui/Toast";
 
 export function ImportantInfoBox({

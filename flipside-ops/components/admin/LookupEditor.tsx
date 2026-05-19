@@ -10,7 +10,7 @@ import {
   addLookup,
   updateLookup,
   deleteLookup,
-} from "@/app/(app)/admin/config/actions";
+} from "@/app/(app)/(administration)/admin/config/actions";
 
 export function LookupEditor({
   table,

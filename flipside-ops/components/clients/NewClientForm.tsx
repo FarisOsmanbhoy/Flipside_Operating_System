@@ -13,7 +13,7 @@ import {
 import {
   createClientRecord,
   type NewClientState,
-} from "@/app/(app)/clients/actions";
+} from "@/app/(app)/(operational)/clients/actions";
 
 type LookupItem = { id: string; name: string | null };
 

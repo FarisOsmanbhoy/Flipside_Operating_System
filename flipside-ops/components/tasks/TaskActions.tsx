@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import {
   setTaskStatus,
   convertToRecurring,
-} from "@/app/(app)/tasks/actions";
+} from "@/app/(app)/(administration)/tasks/actions";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";

@@ -15,7 +15,7 @@ import {
   saveContact,
   deleteContact,
   type ContactState,
-} from "@/app/(app)/clients/actions";
+} from "@/app/(app)/(operational)/clients/actions";
 import type { ClientContact } from "@/lib/database.types";
 
 export function ContactsSection({

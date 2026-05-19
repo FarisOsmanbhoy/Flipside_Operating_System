@@ -12,7 +12,7 @@ import {
 import {
   submitChangeRequest,
   type ChangeRequestState,
-} from "@/app/(app)/clients/change-requests/actions";
+} from "@/app/(app)/(operational)/clients/change-requests/actions";
 
 export function RequestChangeForm({
   clientId,

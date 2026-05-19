@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Briefcase, CheckSquare, User } from "lucide-react";
+import { Search, Briefcase, CheckSquare, User, X } from "lucide-react";
 import { cn } from "@/lib/format";
 import type { SearchHit } from "@/app/api/search/route";
 
@@ -18,36 +18,40 @@ const ICONS: Record<SearchHit["kind"], typeof Briefcase> = {
   staff: User,
 };
 
-export function UniversalSearch() {
+export function CommandPalette({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
   const [q, setQ] = useState("");
-  const [open, setOpen] = useState(false);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else {
+      setQ("");
+      setHits([]);
+      setActive(0);
+    }
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onOpenChange]);
+
+  useEffect(() => {
+    if (!open) return;
     if (q.trim().length < 2) {
       setHits([]);
       return;
@@ -70,51 +74,64 @@ export function UniversalSearch() {
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [q]);
+  }, [q, open]);
+
+  if (!open) return null;
 
   const go = (hit: SearchHit) => {
-    setOpen(false);
-    setQ("");
+    onOpenChange(false);
     router.push(`${ROUTES[hit.kind]}/${hit.id}`);
   };
 
   return (
-    <div ref={wrapRef} className="relative w-full max-w-sm">
-      <Search
-        size={16}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
-      />
-      <input
-        ref={inputRef}
-        value={q}
-        onChange={(e) => {
-          setQ(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setActive((a) => Math.min(a + 1, hits.length - 1));
-          } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setActive((a) => Math.max(a - 1, 0));
-          } else if (e.key === "Enter" && hits[active]) {
-            e.preventDefault();
-            go(hits[active]);
-          } else if (e.key === "Escape") {
-            setOpen(false);
-          }
-        }}
-        placeholder="Search clients, tasks, staff…  (Ctrl+K)"
-        className="h-9 w-full rounded-lg border border-border-soft bg-canvas pl-9 pr-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-        aria-label="Universal search"
-      />
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 bg-black/30"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onOpenChange(false);
+      }}
+    >
+      <div className="w-full max-w-xl bg-surface border border-border-soft rounded-[var(--radius-card)] shadow-2xl overflow-hidden">
+        <div className="flex items-center gap-2 px-4 border-b border-border-soft">
+          <Search size={16} className="text-muted shrink-0" />
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setActive((a) => Math.min(a + 1, hits.length - 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActive((a) => Math.max(a - 1, 0));
+              } else if (e.key === "Enter" && hits[active]) {
+                e.preventDefault();
+                go(hits[active]);
+              }
+            }}
+            placeholder="Search clients, tasks, staff…"
+            className="flex-1 h-12 bg-transparent text-sm focus:outline-none placeholder:text-muted"
+            aria-label="Universal search"
+          />
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="p-1 text-muted hover:text-ink"
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
 
-      {open && q.trim().length >= 2 && (
-        <div className="absolute left-0 right-0 mt-1 bg-surface border border-border-soft rounded-[var(--radius-card)] shadow-lg overflow-hidden z-40">
-          {hits.length === 0 ? (
-            <div className="px-3 py-4 text-sm text-muted">No matches.</div>
+        <div className="max-h-80 overflow-y-auto">
+          {q.trim().length < 2 ? (
+            <div className="px-4 py-6 text-sm text-muted text-center">
+              Start typing to search.
+            </div>
+          ) : hits.length === 0 ? (
+            <div className="px-4 py-6 text-sm text-muted text-center">
+              No matches.
+            </div>
           ) : (
             <ul role="listbox">
               {hits.map((hit, i) => {
@@ -126,7 +143,7 @@ export function UniversalSearch() {
                       onClick={() => go(hit)}
                       onMouseEnter={() => setActive(i)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2 text-sm text-left",
+                        "w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left",
                         i === active ? "bg-brand-50" : "hover:bg-canvas",
                       )}
                     >
@@ -149,7 +166,7 @@ export function UniversalSearch() {
             </ul>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

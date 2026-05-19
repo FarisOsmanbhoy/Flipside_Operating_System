@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, Select, FieldError } from "@/components/ui/Input";
-import { updateProfile, type ProfileState } from "@/app/(app)/staff/actions";
+import { updateProfile, type ProfileState } from "@/app/(app)/(company)/staff/actions";
 import type { Profile, Department } from "@/lib/database.types";
 
 export function ProfileEditForm({

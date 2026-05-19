@@ -17,7 +17,7 @@ import {
   saveSubcontractor,
   deleteSubcontractor,
   type SubState,
-} from "@/app/(app)/clients/actions";
+} from "@/app/(app)/(operational)/clients/actions";
 import type { ClientSubcontractor } from "@/lib/database.types";
 
 export function SubcontractorsSection({
