@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand */
+  --color-brand-50: #e6eef1;
+  --color-brand-100: #bfd2da;
+  --color-brand-200: #99b5c2;
+  --color-brand-300: #4d7c91;
+  --color-brand-500: #005470;
+  --color-brand-600: #004660;
+  --color-brand-700: #003e54;
+  --color-brand-900: #00293a;
+
+  --color-accent-50: #f8fce1;
+  --color-accent-100: #eef6b3;
+  --color-accent-500: #c2d500;
+  --color-accent-600: #a8ba00;
+  --color-accent-700: #8fa000;
+
+  --color-danger-50: #fef2f2;
+  --color-danger-500: #b91c1c;
+  --color-danger-700: #991b1b;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #d97706;
+  --color-warning-700: #b45309;
+
+  --color-ink: #1f2937;
+  --color-muted: #6b7280;
+  --color-surface: #ffffff;
+  --color-canvas: #f4f4f6;
+  --color-border-soft: #e5e7eb;
+
+  /* Typography */
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-josefin), system-ui, sans-serif;
+
+  /* Radius */
+  --radius-card: 14px;
+  --radius-pill: 999px;
+}
+
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
