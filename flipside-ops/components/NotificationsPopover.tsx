@@ -83,7 +83,7 @@ export function NotificationsPopover() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-surface border border-border-soft rounded-[var(--radius-card)] shadow-lg overflow-hidden z-40">
+        <div className="absolute right-0 mt-2 w-80 bg-surface border border-border-soft rounded-[var(--radius-card)] shadow-[var(--shadow-elevated)] overflow-hidden z-40">
           <div className="px-4 py-2 border-b border-border-soft text-xs font-medium text-muted">
             Notifications
           </div>

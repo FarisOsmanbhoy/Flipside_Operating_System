@@ -33,9 +33,9 @@ export function TasksNoticesCard({
               type="button"
               onClick={() => setTab(t.key)}
               className={cn(
-                "px-5 py-4 text-sm border-b-2 transition-colors",
+                "px-5 py-4 text-sm border-b-[3px] transition-colors",
                 tab === t.key
-                  ? "border-brand-500 text-brand-700 font-medium"
+                  ? "border-brand-500 text-brand-700 font-semibold"
                   : "border-transparent text-muted hover:text-ink",
               )}
             >

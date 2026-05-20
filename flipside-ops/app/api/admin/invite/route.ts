@@ -6,12 +6,14 @@ import { createClient as createBrowserlessSupabase } from "@supabase/supabase-js
 const Schema = z.object({
   email: z.email(),
   full_name: z.string().min(1).max(120),
-  role: z.enum(["admin", "manager", "editor"]).default("editor"),
+  access_level: z
+    .union([z.literal(1), z.literal(2), z.literal(3)])
+    .default(1),
   department_id: z.uuid().optional().or(z.literal("")).optional(),
 });
 
 export async function POST(req: NextRequest) {
-  // Require admin via session-scoped Supabase client
+  // Require admin (level 3) via session-scoped Supabase client.
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -21,10 +23,10 @@ export async function POST(req: NextRequest) {
 
   const { data: actor } = await supabase
     .from("profiles")
-    .select("role")
+    .select("access_level")
     .eq("id", user.id)
     .maybeSingle();
-  if (actor?.role !== "admin")
+  if (!actor || actor.access_level < 3)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
@@ -53,13 +55,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // The handle_new_auth_user trigger created a profile with default role 'editor'.
-  // Update role + department to match the invite form.
+  // The handle_new_auth_user trigger created a profile with default level 1.
+  // Update level + department to match the invite form.
   const { error: profileErr } = await admin
     .from("profiles")
     .update({
       full_name: parsed.data.full_name,
-      role: parsed.data.role,
+      access_level: parsed.data.access_level,
       department_id: parsed.data.department_id || null,
     })
     .eq("id", invite.user.id);

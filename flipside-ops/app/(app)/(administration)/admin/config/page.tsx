@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { requireRole } from "@/lib/auth";
+import { requireLevel } from "@/lib/auth";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
 import { LookupEditor } from "@/components/admin/LookupEditor";
@@ -18,7 +18,7 @@ const TABLES = [
 ] as const;
 
 export default async function AdminConfigPage() {
-  await requireRole("admin");
+  await requireLevel(3);
   const supabase = await createClient();
 
   const results = await Promise.all(

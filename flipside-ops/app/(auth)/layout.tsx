@@ -3,20 +3,22 @@ import type { ReactNode } from "react";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-canvas px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-canvas to-accent-50 px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6">
           <Image
             src="/brand/logo.jpg"
             alt="FlipSide Specialties"
-            width={120}
-            height={120}
-            className="rounded-md mb-3"
+            width={96}
+            height={96}
+            className="rounded-md mb-2"
             priority
           />
-          <p className="text-sm text-muted">FlipSide Ops</p>
+          <p className="text-base font-display font-semibold text-brand-700">
+            FlipSide Ops
+          </p>
         </div>
-        <div className="bg-surface border border-border-soft rounded-[var(--radius-card)] shadow-sm p-6">
+        <div className="bg-surface border border-brand-100 rounded-[var(--radius-card)] shadow-[var(--shadow-elevated)] p-6">
           {children}
         </div>
         <p className="text-xs text-muted text-center mt-6">

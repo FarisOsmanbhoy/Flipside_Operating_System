@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getSession } from "@/lib/auth";
+import { canManage, getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -16,7 +16,7 @@ export default async function RequestChangePage({
 }) {
   const profile = await getSession();
   // Admin/manager can use the in-line edit flows; this form is for editors.
-  if (["admin", "manager"].includes(profile.role)) {
+  if (canManage(profile)) {
     redirect(`/clients/${(await params).id}`);
   }
 
@@ -37,7 +37,7 @@ export default async function RequestChangePage({
   if (!client) notFound();
 
   return (
-    <>
+    <div className="max-w-2xl mx-auto">
       <Link
         href={`/clients/${client.id}`}
         className="inline-flex items-center gap-1 text-sm text-muted hover:text-brand-700 mb-4"
@@ -56,6 +56,6 @@ export default async function RequestChangePage({
           />
         </CardBody>
       </Card>
-    </>
+    </div>
   );
 }

@@ -4,12 +4,12 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession } from "@/lib/auth";
+import { canManage, getSession } from "@/lib/auth";
 
 const guardWrite = async () => {
   const profile = await getSession();
-  if (!["admin", "manager"].includes(profile.role)) {
-    throw new Error("Only admins and managers can edit client records.");
+  if (!canManage(profile)) {
+    throw new Error("Only level 2+ users can edit client records.");
   }
   return profile;
 };

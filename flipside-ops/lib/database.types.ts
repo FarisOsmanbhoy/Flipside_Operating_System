@@ -1,7 +1,7 @@
 // Hand-maintained types mirroring the migrations. Replace with `supabase gen
 // types typescript` output once the project is connected via the Supabase CLI.
 
-export type Role = "admin" | "manager" | "editor";
+export type AccessLevel = 1 | 2 | 3;
 export type TaskType =
   | "task"
   | "notice"
@@ -31,14 +31,14 @@ export type ClientSectionType = Lookup & {
   slug: string;
   description: string | null;
   icon: string | null;
-  required_role: Role;
+  required_level: AccessLevel;
 };
 
 export type Profile = {
   id: string;
   full_name: string | null;
   email: string;
-  role: Role;
+  access_level: AccessLevel;
   department_id: string | null;
   phone: string | null;
   mobile: string | null;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckSquare, AlertOctagon, Clock, Briefcase } from "lucide-react";
-import { getSession } from "@/lib/auth";
+import { canManage, getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -12,6 +12,8 @@ import {
   TasksNoticesCard,
   ComingSoonCard,
 } from "@/components/dashboard/TasksNoticesCard";
+import { AlertRibbon } from "@/components/dashboard/AlertRibbon";
+import { IndustryInfoCard } from "@/components/dashboard/IndustryInfoCard";
 import { timeAgo, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -247,6 +249,17 @@ export default async function HomePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
+          <AlertRibbon
+            notice={
+              visibleNotices[0]
+                ? {
+                    id: visibleNotices[0].id,
+                    title: visibleNotices[0].title,
+                    created_at: visibleNotices[0].created_at,
+                  }
+                : null
+            }
+          />
           <TasksNoticesCard
             tasksPane={tasksPane}
             noticesPane={noticesPane}
@@ -255,6 +268,7 @@ export default async function HomePage() {
         </div>
 
         <div className="space-y-4">
+          <IndustryInfoCard />
           <ComingSoonCard
             title="Suggestions & Feedback"
             description="Submit ideas and feedback in a lightweight inbox — coming soon."
@@ -277,7 +291,7 @@ export default async function HomePage() {
         <Link href="/tasks/new?type=notice">
           <Button variant="outline">New notice</Button>
         </Link>
-        {["admin", "manager"].includes(profile.role) && (
+        {canManage(profile) && (
           <Link href="/clients/new">
             <Button variant="outline">New client</Button>
           </Link>

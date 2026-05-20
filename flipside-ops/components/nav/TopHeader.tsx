@@ -6,7 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { Settings, LogOut, User, Search } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { signOut } from "@/app/(auth)/login/actions";
-import type { SessionProfile } from "@/lib/auth";
+import {
+  isAdmin,
+  LEVEL_LABELS,
+  type SessionProfile,
+} from "@/lib/access";
 import { NotificationsPopover } from "@/components/NotificationsPopover";
 import { CommandPalette } from "@/components/CommandPalette";
 
@@ -37,8 +41,8 @@ export function TopHeader({ profile }: { profile: SessionProfile }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-surface border-b border-border-soft">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
+      <header className="sticky top-0 z-30 bg-surface-strong border-b border-border-soft">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image
               src="/brand/logo.jpg"
@@ -82,7 +86,7 @@ export function TopHeader({ profile }: { profile: SessionProfile }) {
               />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-surface border border-border-soft rounded-[var(--radius-card)] shadow-lg overflow-hidden">
+              <div className="absolute right-0 mt-2 w-56 bg-surface border border-border-soft rounded-[var(--radius-card)] shadow-[var(--shadow-elevated)] overflow-hidden z-30">
                 <div className="px-4 py-3 border-b border-border-soft">
                   <div className="text-sm font-medium truncate">
                     {profile.full_name ?? profile.email}
@@ -90,8 +94,8 @@ export function TopHeader({ profile }: { profile: SessionProfile }) {
                   <div className="text-xs text-muted truncate">
                     {profile.email}
                   </div>
-                  <div className="text-xs text-brand-700 mt-1 capitalize">
-                    {profile.role}
+                  <div className="text-xs text-brand-700 mt-1">
+                    Level {profile.access_level} · {LEVEL_LABELS[profile.access_level]}
                   </div>
                 </div>
                 <Link
@@ -101,7 +105,7 @@ export function TopHeader({ profile }: { profile: SessionProfile }) {
                 >
                   <User size={14} /> My profile
                 </Link>
-                {profile.role === "admin" && (
+                {isAdmin(profile) && (
                   <Link
                     href="/admin/users"
                     onClick={() => setMenuOpen(false)}

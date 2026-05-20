@@ -20,11 +20,22 @@ const toneClass: Record<Tone, string> = {
   info: "bg-sky-50 text-sky-700",
 };
 
-type Props = HTMLAttributes<HTMLSpanElement> & {
-  tone?: Tone;
+const dotClass: Record<Tone, string> = {
+  neutral: "bg-gray-400",
+  brand: "bg-brand-500",
+  accent: "bg-accent-500",
+  success: "bg-emerald-500",
+  warning: "bg-warning-500",
+  danger: "bg-danger-500",
+  info: "bg-sky-500",
 };
 
-export function Pill({ tone = "neutral", className, ...rest }: Props) {
+type Props = HTMLAttributes<HTMLSpanElement> & {
+  tone?: Tone;
+  dot?: boolean;
+};
+
+export function Pill({ tone = "neutral", dot, className, children, ...rest }: Props) {
   return (
     <span
       className={cn(
@@ -33,6 +44,14 @@ export function Pill({ tone = "neutral", className, ...rest }: Props) {
         className,
       )}
       {...rest}
-    />
+    >
+      {dot && (
+        <span
+          aria-hidden
+          className={cn("inline-block size-1.5 rounded-full", dotClass[tone])}
+        />
+      )}
+      {children}
+    </span>
   );
 }

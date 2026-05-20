@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession } from "@/lib/auth";
+import { getSession, isAdmin } from "@/lib/auth";
 
 const ProfileSchema = z.object({
   id: z.uuid(),
@@ -12,14 +12,21 @@ const ProfileSchema = z.object({
   mobile: z.string().max(50).optional().or(z.literal("")),
   start_date: z.string().optional().or(z.literal("")),
   department_id: z.uuid().optional().or(z.literal("")),
-  role: z.enum(["admin", "manager", "editor"]).optional(),
+  access_level: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(3)
+    .optional(),
 });
 
-export type ProfileState = {
-  success?: boolean;
-  error?: string;
-  fieldErrors?: Record<string, string[]>;
-} | undefined;
+export type ProfileState =
+  | {
+      success?: boolean;
+      error?: string;
+      fieldErrors?: Record<string, string[]>;
+    }
+  | undefined;
 
 export async function updateProfile(
   _prev: ProfileState,
@@ -33,15 +40,15 @@ export async function updateProfile(
     mobile: formData.get("mobile"),
     start_date: formData.get("start_date"),
     department_id: formData.get("department_id"),
-    role: formData.get("role") || undefined,
+    access_level: formData.get("access_level") || undefined,
   });
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
   const isSelf = parsed.data.id === profile.id;
-  const isAdmin = profile.role === "admin";
-  if (!isSelf && !isAdmin) return { error: "Not allowed." };
+  const actorIsAdmin = isAdmin(profile);
+  if (!isSelf && !actorIsAdmin) return { error: "Not allowed." };
 
   const supabase = await createClient();
   const payload: Record<string, unknown> = {
@@ -49,10 +56,11 @@ export async function updateProfile(
     phone: parsed.data.phone || null,
     mobile: parsed.data.mobile || null,
   };
-  if (isAdmin) {
+  if (actorIsAdmin) {
     payload.start_date = parsed.data.start_date || null;
     payload.department_id = parsed.data.department_id || null;
-    if (parsed.data.role && !isSelf) payload.role = parsed.data.role;
+    if (parsed.data.access_level && !isSelf)
+      payload.access_level = parsed.data.access_level;
   }
 
   const { error } = await supabase

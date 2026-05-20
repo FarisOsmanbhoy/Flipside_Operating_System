@@ -59,7 +59,7 @@ export default async function NewTaskPage({
   ]);
 
   return (
-    <>
+    <div className="max-w-2xl mx-auto">
       <Link
         href="/tasks"
         className="inline-flex items-center gap-1 text-sm text-muted hover:text-brand-700 mb-4"
@@ -82,6 +82,6 @@ export default async function NewTaskPage({
           />
         </CardBody>
       </Card>
-    </>
+    </div>
   );
 }

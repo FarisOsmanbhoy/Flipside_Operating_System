@@ -5,12 +5,12 @@ import {
   Briefcase,
   type LucideIcon,
 } from "lucide-react";
-import type { Role } from "@/lib/auth";
+import type { AccessLevel } from "@/lib/access";
 
 export type NavLeaf = {
   label: string;
   href: string;
-  roles?: Role[];
+  minLevel?: AccessLevel;
   stub?: boolean;
 };
 
@@ -19,7 +19,7 @@ export type NavGroup = {
   icon: LucideIcon;
   href?: string;
   items?: NavLeaf[];
-  roles?: Role[];
+  minLevel?: AccessLevel;
 };
 
 export const NAV: NavGroup[] = [
@@ -38,9 +38,9 @@ export const NAV: NavGroup[] = [
     icon: ClipboardList,
     items: [
       { label: "Tasks & Notices", href: "/tasks" },
-      { label: "Audit Log", href: "/admin/audit", roles: ["admin"] },
-      { label: "Users", href: "/admin/users", roles: ["admin"] },
-      { label: "Config", href: "/admin/config", roles: ["admin"] },
+      { label: "Audit Log", href: "/admin/audit", minLevel: 3 },
+      { label: "Users", href: "/admin/users", minLevel: 3 },
+      { label: "Config", href: "/admin/config", minLevel: 3 },
       { label: "Reports", href: "/admin/reports", stub: true },
       { label: "Suggestions & Feedback", href: "/admin/suggestions", stub: true },
       { label: "Training", href: "/admin/training", stub: true },
@@ -52,20 +52,22 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "Clients", href: "/clients" },
       { label: "Change Requests", href: "/clients/changes" },
-      { label: "New Client", href: "/clients/new", roles: ["admin", "manager"] },
+      { label: "New Client", href: "/clients/new", minLevel: 2 },
     ],
   },
 ];
 
-export function visibleItems(group: NavGroup, role: Role): NavLeaf[] {
-  return (group.items ?? []).filter((it) => !it.roles || it.roles.includes(role));
+export function visibleItems(group: NavGroup, level: AccessLevel): NavLeaf[] {
+  return (group.items ?? []).filter(
+    (it) => it.minLevel === undefined || level >= it.minLevel,
+  );
 }
 
-export function visibleGroups(role: Role): NavGroup[] {
+export function visibleGroups(level: AccessLevel): NavGroup[] {
   return NAV.filter((g) => {
-    if (g.roles && !g.roles.includes(role)) return false;
+    if (g.minLevel && level < g.minLevel) return false;
     if (!g.items) return true;
-    return visibleItems(g, role).length > 0;
+    return visibleItems(g, level).length > 0;
   });
 }
 

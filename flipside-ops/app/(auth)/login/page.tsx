@@ -16,7 +16,9 @@ export default async function LoginPage({
 
   return (
     <>
-      <h1 className="text-xl font-semibold text-center mb-1">Sign in</h1>
+      <h1 className="font-display text-2xl font-semibold text-center mb-1 text-brand-700">
+        Sign in
+      </h1>
       <p className="text-sm text-muted text-center mb-5">
         Use your FlipSide email to continue.
       </p>

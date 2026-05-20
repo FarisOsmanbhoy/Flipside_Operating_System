@@ -3,25 +3,25 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireRole } from "@/lib/auth";
+import { requireLevel } from "@/lib/auth";
 
-const RoleSchema = z.object({
+const LevelSchema = z.object({
   id: z.uuid(),
-  role: z.enum(["admin", "manager", "editor"]),
+  access_level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
 });
 
-export async function setUserRole(input: {
+export async function setUserLevel(input: {
   id: string;
-  role: "admin" | "manager" | "editor";
+  access_level: 1 | 2 | 3;
 }) {
-  await requireRole("admin");
-  const parsed = RoleSchema.safeParse(input);
+  await requireLevel(3);
+  const parsed = LevelSchema.safeParse(input);
   if (!parsed.success) throw new Error("Invalid input.");
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ role: parsed.data.role })
+    .update({ access_level: parsed.data.access_level })
     .eq("id", parsed.data.id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/users");
@@ -34,7 +34,7 @@ const ActiveSchema = z.object({
 });
 
 export async function setUserActive(input: { id: string; is_active: boolean }) {
-  await requireRole("admin");
+  await requireLevel(3);
   const parsed = ActiveSchema.safeParse(input);
   if (!parsed.success) throw new Error("Invalid input.");
 

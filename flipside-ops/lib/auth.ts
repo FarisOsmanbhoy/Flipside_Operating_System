@@ -2,18 +2,16 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { AccessLevel, SessionProfile } from "@/lib/access";
 
-export type Role = "admin" | "manager" | "editor";
-
-export type SessionProfile = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: Role;
-  department_id: string | null;
-  avatar_url: string | null;
-  is_active: boolean;
-};
+export {
+  type AccessLevel,
+  type SessionProfile,
+  LEVEL_LABELS,
+  isAdmin,
+  canManage,
+  hasLevel,
+} from "@/lib/access";
 
 /**
  * Verify the user has a Supabase session and a profile row.
@@ -30,7 +28,7 @@ export const getSession = cache(async (): Promise<SessionProfile> => {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, email, full_name, role, department_id, avatar_url, is_active",
+      "id, email, full_name, access_level, department_id, avatar_url, is_active",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -41,14 +39,8 @@ export const getSession = cache(async (): Promise<SessionProfile> => {
   return profile as SessionProfile;
 });
 
-export async function requireRole(
-  ...allowed: Role[]
-): Promise<SessionProfile> {
+export async function requireLevel(min: AccessLevel): Promise<SessionProfile> {
   const profile = await getSession();
-  if (!allowed.includes(profile.role)) redirect("/?error=forbidden");
+  if (profile.access_level < min) redirect("/?error=forbidden");
   return profile;
-}
-
-export function can(role: Role, ...allowed: Role[]) {
-  return allowed.includes(role);
 }

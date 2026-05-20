@@ -76,11 +76,15 @@ export function ProfileEditForm({
 
       {isAdmin && !isSelf && (
         <div>
-          <Label htmlFor="role">Role</Label>
-          <Select id="role" name="role" defaultValue={profile.role}>
-            <option value="editor">editor</option>
-            <option value="manager">manager</option>
-            <option value="admin">admin</option>
+          <Label htmlFor="access_level">Access level</Label>
+          <Select
+            id="access_level"
+            name="access_level"
+            defaultValue={String(profile.access_level)}
+          >
+            <option value="1">Level 1 — Editor</option>
+            <option value="2">Level 2 — Manager</option>
+            <option value="3">Level 3 — Admin (full access)</option>
           </Select>
         </div>
       )}

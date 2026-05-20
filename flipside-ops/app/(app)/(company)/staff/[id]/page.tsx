@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Mail, Phone, Calendar, Building2, ArrowLeft } from "lucide-react";
-import { getSession } from "@/lib/auth";
+import { getSession, isAdmin, LEVEL_LABELS } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
@@ -31,8 +31,7 @@ export default async function StaffDetailPage({
 
   if (!staffMember) notFound();
 
-  const canEdit =
-    profile.id === staffMember.id || profile.role === "admin";
+  const canEdit = profile.id === staffMember.id || isAdmin(profile);
   const dept = depts?.find((d) => d.id === staffMember.department_id);
 
   return (
@@ -59,14 +58,16 @@ export default async function StaffDetailPage({
                 </h1>
                 <Pill
                   tone={
-                    staffMember.role === "admin"
+                    staffMember.access_level >= 3
                       ? "brand"
-                      : staffMember.role === "manager"
+                      : staffMember.access_level >= 2
                         ? "accent"
                         : "neutral"
                   }
+                  dot
                 >
-                  {staffMember.role}
+                  L{staffMember.access_level} ·{" "}
+                  {LEVEL_LABELS[staffMember.access_level as 1 | 2 | 3]}
                 </Pill>
                 {!staffMember.is_active && (
                   <Pill tone="danger">Inactive</Pill>
@@ -118,7 +119,7 @@ export default async function StaffDetailPage({
               <ProfileEditForm
                 profile={staffMember}
                 departments={depts ?? []}
-                isAdmin={profile.role === "admin"}
+                isAdmin={isAdmin(profile)}
                 isSelf={profile.id === staffMember.id}
               />
             </CardBody>

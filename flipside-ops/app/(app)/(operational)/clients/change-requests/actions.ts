@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession } from "@/lib/auth";
+import { canManage, getSession } from "@/lib/auth";
 
 const Schema = z.object({
   client_id: z.uuid(),
@@ -52,8 +52,8 @@ export async function decideChangeRequest(input: {
   decision_notes?: string;
 }) {
   const profile = await getSession();
-  if (!["admin", "manager"].includes(profile.role)) {
-    throw new Error("Only admins and managers can review change requests.");
+  if (!canManage(profile)) {
+    throw new Error("Only level 2+ users can review change requests.");
   }
   const parsed = DecideSchema.safeParse(input);
   if (!parsed.success) throw new Error("Invalid review payload.");

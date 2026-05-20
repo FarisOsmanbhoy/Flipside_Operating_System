@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes, type SelectHTMLAttributes } from "react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/format";
 
 const base =
@@ -17,11 +18,26 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
 );
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
-  function Select({ className, children, ...rest }, ref) {
+  function Select({ className, children, disabled, ...rest }, ref) {
     return (
-      <select ref={ref} className={cn(base, "h-10 pr-8 appearance-none bg-no-repeat bg-right", className)} {...rest}>
-        {children}
-      </select>
+      <span className="relative block">
+        <select
+          ref={ref}
+          disabled={disabled}
+          className={cn(base, "h-10 pr-9 appearance-none", className)}
+          {...rest}
+        >
+          {children}
+        </select>
+        <ChevronDown
+          size={16}
+          className={cn(
+            "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted",
+            disabled && "opacity-50",
+          )}
+          aria-hidden
+        />
+      </span>
     );
   },
 );

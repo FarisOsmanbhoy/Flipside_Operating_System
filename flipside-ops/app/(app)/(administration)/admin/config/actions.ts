@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireRole } from "@/lib/auth";
+import { requireLevel } from "@/lib/auth";
 
 const ALLOWED = new Set([
   "departments",
@@ -22,7 +22,7 @@ const guard = (table: string) => {
 
 const Add = z.object({ table: z.string(), name: z.string().min(1).max(120) });
 export async function addLookup(input: { table: string; name: string }) {
-  await requireRole("admin");
+  await requireLevel(3);
   const parsed = Add.parse(input);
   guard(parsed.table);
 
@@ -53,7 +53,7 @@ export async function updateLookup(input: {
   is_active?: boolean;
   display_order?: number;
 }) {
-  await requireRole("admin");
+  await requireLevel(3);
   const parsed = Update.parse(input);
   guard(parsed.table);
 
@@ -74,7 +74,7 @@ export async function updateLookup(input: {
 
 const Del = z.object({ table: z.string(), id: z.uuid() });
 export async function deleteLookup(input: { table: string; id: string }) {
-  await requireRole("admin");
+  await requireLevel(3);
   const parsed = Del.parse(input);
   guard(parsed.table);
 

@@ -26,7 +26,7 @@ export function InviteUserButton({
         body: JSON.stringify({
           email: formData.get("email"),
           full_name: formData.get("full_name"),
-          role: formData.get("role"),
+          access_level: Number(formData.get("access_level")),
           department_id: formData.get("department_id") || undefined,
         }),
       });
@@ -62,13 +62,13 @@ export function InviteUserButton({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="role" required>
-                Role
+              <Label htmlFor="access_level" required>
+                Access level
               </Label>
-              <Select id="role" name="role" defaultValue="editor">
-                <option value="editor">editor</option>
-                <option value="manager">manager</option>
-                <option value="admin">admin</option>
+              <Select id="access_level" name="access_level" defaultValue="1">
+                <option value="1">Level 1 — Editor</option>
+                <option value="2">Level 2 — Manager</option>
+                <option value="3">Level 3 — Admin</option>
               </Select>
             </div>
             <div>

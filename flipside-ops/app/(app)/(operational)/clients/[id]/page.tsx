@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, User as UserIcon } from "lucide-react";
-import { getSession } from "@/lib/auth";
+import { canManage, getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -90,7 +90,7 @@ export default async function ClientDetailPage({
       : Promise.resolve({ data: null }),
   ]);
 
-  const canEdit = ["admin", "manager"].includes(profile.role);
+  const canEdit = canManage(profile);
   const sdMap = new Map(
     (sectionData ?? []).map((d) => [d.section_type_id, d] as const),
   );

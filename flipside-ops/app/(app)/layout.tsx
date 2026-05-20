@@ -15,7 +15,7 @@ export default async function AppLayout({
     <ToastProvider>
       <div className="min-h-screen flex flex-col">
         <TopHeader profile={profile} />
-        <MainNav role={profile.role} />
+        <MainNav level={profile.access_level} />
         <main className="flex-1">
           <PageShell>{children}</PageShell>
         </main>
