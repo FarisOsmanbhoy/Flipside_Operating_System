@@ -70,7 +70,7 @@ export default async function NewTaskPage({
       <Card>
         <CardBody>
           <TaskForm
-            initialType={(type as "task" | "notice" | "industry_alert") ?? "task"}
+            initialType={(type as "task" | "notice" | "industry_alert") ?? "notice"}
             initialClientId={client}
             people={people ?? []}
             departments={depts ?? []}

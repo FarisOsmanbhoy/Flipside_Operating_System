@@ -187,11 +187,11 @@ export function MainNav({ level }: { level: AccessLevel }) {
           })}
 
           <Link
-            href="/tasks/new"
+            href="/tasks/new?type=notice"
             className="ml-auto my-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-500 text-white hover:bg-brand-600 transition-colors"
           >
             <Plus size={14} />
-            New task
+            New notice
           </Link>
         </nav>
 

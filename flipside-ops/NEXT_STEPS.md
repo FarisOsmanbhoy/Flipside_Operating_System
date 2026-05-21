@@ -19,7 +19,7 @@ Claude session can pick up exactly where the previous one left off.
 - Auth flow: login (password + magic link), forgot, reset, callback
 - App shell: TopHeader with universal search (Ctrl+K) + notifications popover + avatar dropdown; MainNav with click-toggle dropdowns + mobile hamburger
 - All 3 v1 modules: Staff, Clients (sections + contacts + subs + request-change + approval queue), Tasks (tabs + new + detail + comments + recurring conversion)
-- Home dashboard: greeting + stat row + tabbed tasks/notices/activity card + alert ribbon + industry-info widget + coming-soon cards + realtime refresh
+- Home dashboard: greeting + 2-column layout (brand/profile sidebar, hero tabbed card with industry/tasks/notices/activity + bottom coming-soon row) + alert ribbon + realtime refresh
 - Admin pages: `/admin/{users,config,audit}` — Users uses the three-pane layout with an inline level editor; invite via Supabase Admin API
 - Shared UI primitives: Button, Card, Pill (with `dot` variant), Modal, Accordion, InlineEdit, Avatar, StalenessBadge, EmptyState, Toast, Input/Label/Select (chevron caret) / Textarea, **ThreePaneLayout**, **DataTable** (sortable, selectable, status stripe), **ContextPanel**
 - `npm run build` passes cleanly; `tsc --noEmit` clean
@@ -33,7 +33,7 @@ Claude session can pick up exactly where the previous one left off.
   - `ClientsListClient`, `StaffListClient`, `TasksListClient`, `AdminUsersListClient`, `ChangeRequestsListClient`, `AuditListClient` each own row-selection state and drive the right pane
   - Shell widened to `max-w-[1440px]`; two-tone header strip; brand "+ New task" action button on the right of the nav
   - Auth pages get a brand gradient background + elevated card shadow + display-font headings
-  - Dashboard adds an `AlertRibbon` + `IndustryInfoCard` alongside the existing tabbed tasks/notices/activity card; tab underline thickened
+  - Dashboard: `AlertRibbon` + tabbed hero card (Industry | Tasks | Notices | Activity) with count badges; industry content in first tab; three coming-soon cards in a bottom row
   - Reference mockups live in `assets/PROPS EXAMPLE 1..6.png` + `PROPS FLIGHTWORX.pdf`
 - **Access-level model** (replaces the `admin/manager/editor` role enum):
   - `profiles.access_level int` with `check (between 1 and 3)`; `1 = Editor`, `2 = Manager`, `3 = Admin`
@@ -163,7 +163,7 @@ flipside-ops/
 ├── app/
 │   ├── (auth)/                  ← login, forgot-password, reset-password (brand gradient layout)
 │   ├── (app)/                   ← all authenticated pages (shell: TopHeader + MainNav + PageShell)
-│   │   ├── page.tsx             ← home dashboard (alert ribbon + stat row + tabbed card + widgets)
+│   │   ├── page.tsx             ← home dashboard (sidebar + hero tabbed card + bottom widgets)
 │   │   ├── (company)/staff/, me/, company/profile/
 │   │   ├── (administration)/tasks/, admin/{users,config,audit,reports,suggestions,training}/
 │   │   └── (operational)/clients/
@@ -176,7 +176,7 @@ flipside-ops/
 │   ├── ui/                      ← shared primitives + DataTable + Pill `dot` variant
 │   ├── nav/                     ← TopHeader, MainNav (click-toggle + hamburger), Breadcrumbs, PageShell, nav-items
 │   ├── layout/                  ← ThreePaneLayout, ContextPanel
-│   ├── dashboard/               ← TasksNoticesCard, AlertRibbon, IndustryInfoCard, ComingSoonCard
+│   ├── dashboard/               ← TasksNoticesCard, AlertRibbon, IndustryInfoPanel, ComingSoonCard
 │   ├── clients/                 ← ClientsFilters, ClientsListClient, ChangeRequestsListClient, …
 │   ├── tasks/                   ← TasksFilters, TasksListClient, TaskForm, CommentsThread
 │   ├── staff/                   ← StaffFilters, StaffListClient, ProfileEditForm

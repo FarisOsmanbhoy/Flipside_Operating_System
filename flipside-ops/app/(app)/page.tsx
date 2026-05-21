@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { CheckSquare, AlertOctagon, Clock, Briefcase } from "lucide-react";
 import { canManage, getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardBody } from "@/components/ui/Card";
 import { Pill } from "@/components/ui/Pill";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
@@ -13,7 +11,7 @@ import {
   ComingSoonCard,
 } from "@/components/dashboard/TasksNoticesCard";
 import { AlertRibbon } from "@/components/dashboard/AlertRibbon";
-import { IndustryInfoCard } from "@/components/dashboard/IndustryInfoCard";
+import { IndustryInfoPanel } from "@/components/dashboard/IndustryInfoCard";
 import { BrandCard } from "@/components/dashboard/BrandCard";
 import { ProfileCard } from "@/components/dashboard/ProfileCard";
 import { timeAgo, shortDate } from "@/lib/format";
@@ -24,13 +22,10 @@ export default async function HomePage() {
   const profile = await getSession();
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
-  const sixtyAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
   const [
     { count: openTasks },
     { count: overdueTasks },
-    { count: staleClients },
-    { count: activeJobs },
     { data: myTasks },
     { data: notices },
     { data: activity },
@@ -50,13 +45,6 @@ export default async function HomePage() {
       .neq("status", "done")
       .neq("status", "cancelled")
       .lt("due_date", nowIso),
-    supabase
-      .from("clients")
-      .select("*", { count: "exact", head: true })
-      .lt("updated_at", sixtyAgo),
-    supabase
-      .from("clients")
-      .select("*", { count: "exact", head: true }),
     supabase
       .from("tasks")
       .select(
@@ -228,38 +216,7 @@ export default async function HomePage() {
       <RealtimeRefresh />
       <PageHeader title={`${greeting}, ${name}`} subtitle={summary} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <StatCard
-          icon={<CheckSquare size={18} />}
-          label="My open tasks"
-          value={openTasks ?? 0}
-          href="/tasks?mine=1"
-          tone="brand"
-        />
-        <StatCard
-          icon={<AlertOctagon size={18} />}
-          label="Overdue"
-          value={overdueCount}
-          href="/tasks?mine=1"
-          tone={overdueCount > 0 ? "danger" : "neutral"}
-        />
-        <StatCard
-          icon={<Clock size={18} />}
-          label="Stale clients"
-          value={staleClients ?? 0}
-          href="/clients"
-          tone={(staleClients ?? 0) > 0 ? "warning" : "neutral"}
-        />
-        <StatCard
-          icon={<Briefcase size={18} />}
-          label="Clients"
-          value={activeJobs ?? 0}
-          href="/clients"
-          tone="neutral"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
         <aside className="space-y-4">
           <BrandCard />
           <ProfileCard
@@ -271,7 +228,7 @@ export default async function HomePage() {
           />
         </aside>
 
-        <div>
+        <div className="flex flex-col gap-4 min-w-0">
           <AlertRibbon
             notice={
               visibleNotices[0]
@@ -284,79 +241,47 @@ export default async function HomePage() {
             }
           />
           <TasksNoticesCard
+            industryPane={<IndustryInfoPanel />}
             tasksPane={tasksPane}
             noticesPane={noticesPane}
             activityPane={activityPane}
+            counts={{
+              tasks: openTasks ?? 0,
+              notices: visibleNotices.length,
+              activity: (activity ?? []).length,
+            }}
           />
-        </div>
 
-        <div className="space-y-4">
-          <IndustryInfoCard />
-          <ComingSoonCard
-            title="Suggestions & Feedback"
-            description="Submit ideas and feedback in a lightweight inbox — coming soon."
-          />
-          <ComingSoonCard
-            title="Training"
-            description="Track training modules and completions per staff member."
-          />
-          <ComingSoonCard
-            title="Polls"
-            description="Quick polls for the team — coming soon."
-          />
-        </div>
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <ComingSoonCard
+              title="Suggestions & Feedback"
+              description="Submit ideas and feedback in a lightweight inbox — coming soon."
+            />
+            <ComingSoonCard
+              title="Training"
+              description="Track training modules and completions per staff member."
+            />
+            <ComingSoonCard
+              title="Polls"
+              description="Quick polls for the team — coming soon."
+            />
+          </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/tasks/new">
-          <Button variant="outline">New task</Button>
-        </Link>
-        <Link href="/tasks/new?type=notice">
-          <Button variant="outline">New notice</Button>
-        </Link>
-        {canManage(profile) && (
-          <Link href="/clients/new">
-            <Button variant="outline">New client</Button>
-          </Link>
-        )}
+          <div className="flex flex-wrap gap-2">
+            <Link href="/tasks/new">
+              <Button variant="outline">New task</Button>
+            </Link>
+            <Link href="/tasks/new?type=notice">
+              <Button variant="outline">New notice</Button>
+            </Link>
+            {canManage(profile) && (
+              <Link href="/clients/new">
+                <Button variant="outline">New client</Button>
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
     </>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  href,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  href: string;
-  tone: "brand" | "danger" | "warning" | "neutral";
-}) {
-  const toneClass =
-    tone === "danger"
-      ? "text-danger-700"
-      : tone === "warning"
-        ? "text-warning-700"
-        : tone === "brand"
-          ? "text-brand-700"
-          : "text-ink";
-  return (
-    <Link href={href}>
-      <Card className="hover:border-brand-500 transition-colors h-full">
-        <CardBody className="!p-4">
-          <div className="flex items-center gap-2 text-xs text-muted uppercase tracking-wide">
-            {icon} {label}
-          </div>
-          <div className={`text-3xl font-semibold mt-2 ${toneClass}`}>
-            {value}
-          </div>
-        </CardBody>
-      </Card>
-    </Link>
   );
 }
