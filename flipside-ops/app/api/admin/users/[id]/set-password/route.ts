@@ -59,5 +59,14 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  await admin
+    .from("profiles")
+    .update({
+      password_set_at: new Date().toISOString(),
+      password_set_by: user.id,
+      must_change_password: true,
+    })
+    .eq("id", targetUserId);
+
   return NextResponse.json({ ok: true });
 }

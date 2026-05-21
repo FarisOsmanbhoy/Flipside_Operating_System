@@ -31,10 +31,21 @@ export async function updatePassword(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({
+  const { data: updated, error } = await supabase.auth.updateUser({
     password: parsed.data.password,
   });
   if (error) return { error: error.message };
+
+  if (updated.user) {
+    await supabase
+      .from("profiles")
+      .update({
+        password_set_at: new Date().toISOString(),
+        password_set_by: null,
+        must_change_password: false,
+      })
+      .eq("id", updated.user.id);
+  }
 
   redirect("/?password=updated");
 }

@@ -19,6 +19,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ProfileEditForm } from "@/components/staff/ProfileEditForm";
 import { AvatarUploader } from "@/components/staff/AvatarUploader";
+import { ChangeMyPasswordCard } from "@/components/staff/ChangeMyPasswordCard";
 import { shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -176,6 +177,17 @@ export default async function StaffDetailPage({
                 isAdmin={isAdmin(profile)}
                 isSelf={profile.id === staffMember.id}
               />
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
+      {profile.id === staffMember.id && (
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold mb-3">Password</h2>
+          <Card>
+            <CardBody>
+              <ChangeMyPasswordCard />
             </CardBody>
           </Card>
         </div>

@@ -51,6 +51,9 @@ export type Profile = {
   avatar_url: string | null;
   languages: string[];
   is_active: boolean;
+  password_set_at: string | null;
+  password_set_by: string | null;
+  must_change_password: boolean;
   created_at: string;
   updated_at: string;
 };

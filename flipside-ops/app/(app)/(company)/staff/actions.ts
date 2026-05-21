@@ -125,6 +125,56 @@ export async function updateProfile(
   return { success: true };
 }
 
+const PasswordSchema = z
+  .object({
+    password: z.string().min(8, "Use at least 8 characters.").max(128),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, {
+    path: ["confirm"],
+    error: "Passwords don't match.",
+  });
+
+export type ChangeMyPasswordState =
+  | {
+      success?: boolean;
+      error?: string;
+      fieldErrors?: { password?: string[]; confirm?: string[] };
+    }
+  | undefined;
+
+export async function changeMyPassword(
+  _prev: ChangeMyPasswordState,
+  formData: FormData,
+): Promise<ChangeMyPasswordState> {
+  const profile = await getSession();
+
+  const parsed = PasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirm: formData.get("confirm"),
+  });
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+  if (error) return { error: error.message };
+
+  await supabase
+    .from("profiles")
+    .update({
+      password_set_at: new Date().toISOString(),
+      password_set_by: null,
+      must_change_password: false,
+    })
+    .eq("id", profile.id);
+
+  return { success: true };
+}
+
 export async function setAvatarUrl(input: {
   id: string;
   avatar_url: string | null;
