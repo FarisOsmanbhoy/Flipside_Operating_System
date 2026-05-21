@@ -14,6 +14,8 @@ import {
 } from "@/components/dashboard/TasksNoticesCard";
 import { AlertRibbon } from "@/components/dashboard/AlertRibbon";
 import { IndustryInfoCard } from "@/components/dashboard/IndustryInfoCard";
+import { BrandCard } from "@/components/dashboard/BrandCard";
+import { ProfileCard } from "@/components/dashboard/ProfileCard";
 import { timeAgo, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -94,6 +96,16 @@ export default async function HomePage() {
     ? await supabase.from("profiles").select("id, full_name").in("id", actorIds)
     : { data: [] };
   const actorMap = new Map((actors ?? []).map((a) => [a.id, a]));
+
+  const departmentName = profile.department_id
+    ? (
+        await supabase
+          .from("departments")
+          .select("name")
+          .eq("id", profile.department_id)
+          .maybeSingle()
+      ).data?.name ?? null
+    : null;
 
   const hour = new Date().getHours();
   const greeting =
@@ -247,8 +259,19 @@ export default async function HomePage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] gap-4">
+        <aside className="space-y-4">
+          <BrandCard />
+          <ProfileCard
+            userId={profile.id}
+            fullName={profile.full_name}
+            email={profile.email}
+            avatarUrl={profile.avatar_url}
+            departmentName={departmentName}
+          />
+        </aside>
+
+        <div>
           <AlertRibbon
             notice={
               visibleNotices[0]

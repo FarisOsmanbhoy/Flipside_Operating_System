@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Breadcrumbs } from "./Breadcrumbs";
 
 const WIDE_ROUTES: RegExp[] = [
+  /^\/$/,
   /^\/staff\/?$/,
   /^\/admin\/users\/?$/,
   /^\/clients\/?$/,
