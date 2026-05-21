@@ -15,6 +15,7 @@ import {
   setUserLevel,
   setUserActive,
 } from "@/app/(app)/(administration)/admin/users/actions";
+import { SetPasswordButton } from "@/components/admin/SetPasswordButton";
 import { LEVEL_LABELS, type AccessLevel } from "@/lib/access";
 import type { Profile } from "@/lib/database.types";
 
@@ -26,9 +27,11 @@ const levelTone = (l: number) =>
 export function UserContextPanel({
   user,
   departments,
+  currentUserId,
 }: {
   user: Profile | null;
   departments: Dept[];
+  currentUserId: string;
 }) {
   const router = useRouter();
   const { push } = useToast();
@@ -135,6 +138,11 @@ export function UserContextPanel({
         </div>
       </ContextPanel.Body>
       <ContextPanel.Footer>
+        <SetPasswordButton
+          userId={user.id}
+          userLabel={user.full_name ?? user.email}
+          disabled={user.id === currentUserId}
+        />
         <Button
           variant={user.is_active ? "outline" : "primary"}
           onClick={toggleActive}

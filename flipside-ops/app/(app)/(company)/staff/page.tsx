@@ -21,7 +21,7 @@ export default async function StaffPage({
     supabase
       .from("profiles")
       .select(
-        "id, full_name, email, access_level, phone, mobile, department_id, avatar_url, is_active",
+        "id, full_name, email, access_level, phone, mobile, department_id, avatar_url, is_active, job_title",
       )
       .order("full_name", { ascending: true }),
     supabase

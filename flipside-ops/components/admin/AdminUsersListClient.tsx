@@ -25,9 +25,11 @@ const statusColor = (active: boolean) =>
 export function AdminUsersListClient({
   users,
   departments,
+  currentUserId,
 }: {
   users: Profile[];
   departments: Dept[];
+  currentUserId: string;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -197,7 +199,11 @@ export function AdminUsersListClient({
         </div>
       }
       context={
-        <UserContextPanel user={selected} departments={departments} />
+        <UserContextPanel
+          user={selected}
+          departments={departments}
+          currentUserId={currentUserId}
+        />
       }
       contextOpen={contextOpen}
       onContextOpenChange={setContextOpen}

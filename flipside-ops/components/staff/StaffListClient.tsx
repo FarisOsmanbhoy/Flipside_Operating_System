@@ -25,6 +25,7 @@ export type StaffRow = {
   mobile: string | null;
   department_id: string | null;
   avatar_url: string | null;
+  job_title: string | null;
 };
 
 type Dept = { id: string; name: string };
@@ -61,27 +62,6 @@ export function StaffListClient({
       ),
     },
     {
-      key: "level",
-      header: "Level",
-      sortValue: (r) => r.access_level,
-      accessor: (r) => (
-        <Pill tone={levelTone(r.access_level)} dot>
-          L{r.access_level} · {LEVEL_LABELS[r.access_level]}
-        </Pill>
-      ),
-    },
-    {
-      key: "dept",
-      header: "Department",
-      sortValue: (r) =>
-        r.department_id ? (deptMap.get(r.department_id) ?? "") : "",
-      accessor: (r) => (
-        <span className="text-muted">
-          {r.department_id ? (deptMap.get(r.department_id) ?? "—") : "—"}
-        </span>
-      ),
-    },
-    {
       key: "email",
       header: "Email",
       sortValue: (r) => r.email,
@@ -96,10 +76,11 @@ export function StaffListClient({
       ),
     },
     {
-      key: "phone",
-      header: "Phone",
+      key: "number",
+      header: "Number",
+      sortValue: (r) => r.mobile ?? r.phone ?? "",
       accessor: (r) => {
-        const v = r.phone ?? r.mobile;
+        const v = r.mobile ?? r.phone;
         return v ? (
           <a
             href={`tel:${v}`}
@@ -112,6 +93,14 @@ export function StaffListClient({
           <span className="text-muted">—</span>
         );
       },
+    },
+    {
+      key: "job_title",
+      header: "Job title",
+      sortValue: (r) => r.job_title ?? "",
+      accessor: (r) => (
+        <span className="text-muted">{r.job_title ?? "—"}</span>
+      ),
     },
   ];
 

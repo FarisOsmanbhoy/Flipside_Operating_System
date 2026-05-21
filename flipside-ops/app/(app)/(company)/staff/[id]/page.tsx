@@ -1,12 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Mail, Phone, Calendar, Building2, ArrowLeft } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  Calendar,
+  Building2,
+  ArrowLeft,
+  Briefcase,
+  Cake,
+  Car,
+  Globe,
+  Hash,
+  Sparkles,
+} from "lucide-react";
 import { getSession, isAdmin, LEVEL_LABELS } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ProfileEditForm } from "@/components/staff/ProfileEditForm";
+import { AvatarUploader } from "@/components/staff/AvatarUploader";
 import { shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -46,16 +58,22 @@ export default async function StaffDetailPage({
       <Card>
         <CardBody>
           <div className="flex flex-col sm:flex-row gap-6 items-start">
-            <Avatar
-              name={staffMember.full_name}
-              src={staffMember.avatar_url}
-              size={96}
+            <AvatarUploader
+              userId={staffMember.id}
+              fullName={staffMember.full_name}
+              avatarUrl={staffMember.avatar_url}
+              canEdit={canEdit}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-semibold">
                   {staffMember.full_name ?? staffMember.email}
                 </h1>
+                {staffMember.job_title && (
+                  <span className="text-sm text-muted">
+                    {staffMember.job_title}
+                  </span>
+                )}
                 <Pill
                   tone={
                     staffMember.access_level >= 3
@@ -87,22 +105,58 @@ export default async function StaffDetailPage({
                   <Building2 size={14} />
                   {dept?.name ?? "No department"}
                 </div>
-                {staffMember.phone && (
-                  <div className="flex items-center gap-2 text-muted">
-                    <Phone size={14} />
-                    {staffMember.phone}
-                  </div>
-                )}
                 {staffMember.mobile && (
                   <div className="flex items-center gap-2 text-muted">
                     <Phone size={14} />
                     {staffMember.mobile} (mobile)
                   </div>
                 )}
+                {staffMember.phone && (
+                  <div className="flex items-center gap-2 text-muted">
+                    <Phone size={14} />
+                    {staffMember.phone}
+                  </div>
+                )}
+                {staffMember.extension && (
+                  <div className="flex items-center gap-2 text-muted">
+                    <Hash size={14} />
+                    Ext. {staffMember.extension}
+                  </div>
+                )}
+                {staffMember.job_title && (
+                  <div className="flex items-center gap-2 text-muted">
+                    <Briefcase size={14} />
+                    {staffMember.job_title}
+                  </div>
+                )}
                 {staffMember.start_date && (
                   <div className="flex items-center gap-2 text-muted">
                     <Calendar size={14} />
                     Started {shortDate(staffMember.start_date)}
+                  </div>
+                )}
+                {staffMember.date_of_birth && (
+                  <div className="flex items-center gap-2 text-muted">
+                    <Cake size={14} />
+                    {shortDate(staffMember.date_of_birth)}
+                  </div>
+                )}
+                {staffMember.car_registration && (
+                  <div className="flex items-center gap-2 text-muted">
+                    <Car size={14} />
+                    {staffMember.car_registration}
+                  </div>
+                )}
+                {staffMember.languages && staffMember.languages.length > 0 && (
+                  <div className="flex items-center gap-2 text-muted">
+                    <Globe size={14} />
+                    {staffMember.languages.join(", ")}
+                  </div>
+                )}
+                {staffMember.specialisation && (
+                  <div className="flex items-center gap-2 text-muted sm:col-span-2">
+                    <Sparkles size={14} />
+                    {staffMember.specialisation}
                   </div>
                 )}
               </div>

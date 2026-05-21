@@ -3,7 +3,10 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, Select, FieldError } from "@/components/ui/Input";
-import { updateProfile, type ProfileState } from "@/app/(app)/(company)/staff/actions";
+import {
+  updateProfile,
+  type ProfileState,
+} from "@/app/(app)/(company)/staff/actions";
 import type { Profile, Department } from "@/lib/database.types";
 
 export function ProfileEditForm({
@@ -22,8 +25,16 @@ export function ProfileEditForm({
     undefined,
   );
 
+  // Permission matrix per the spec.
+  const canEditName = isSelf || isAdmin;
+  const canEditMobile = isSelf || isAdmin;
+  const adminOnly = isAdmin; // every other editable field
+
   return (
-    <form action={action} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <form
+      action={action}
+      className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+    >
       <input type="hidden" name="id" value={profile.id} />
 
       <div>
@@ -32,28 +43,61 @@ export function ProfileEditForm({
           id="full_name"
           name="full_name"
           defaultValue={profile.full_name ?? ""}
+          disabled={!canEditName}
         />
         <FieldError message={state?.fieldErrors?.full_name?.[0]} />
       </div>
 
       <div>
-        <Label htmlFor="phone">Phone</Label>
-        <Input id="phone" name="phone" defaultValue={profile.phone ?? ""} />
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          defaultValue={profile.email}
+          disabled={!adminOnly}
+        />
+        <FieldError message={state?.fieldErrors?.email?.[0]} />
       </div>
 
       <div>
         <Label htmlFor="mobile">Mobile</Label>
-        <Input id="mobile" name="mobile" defaultValue={profile.mobile ?? ""} />
+        <Input
+          id="mobile"
+          name="mobile"
+          defaultValue={profile.mobile ?? ""}
+          disabled={!canEditMobile}
+        />
       </div>
 
       <div>
-        <Label htmlFor="start_date">Start date</Label>
+        <Label htmlFor="phone">Phone</Label>
         <Input
-          id="start_date"
-          name="start_date"
+          id="phone"
+          name="phone"
+          defaultValue={profile.phone ?? ""}
+          disabled={!adminOnly}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="extension">Extension</Label>
+        <Input
+          id="extension"
+          name="extension"
+          defaultValue={profile.extension ?? ""}
+          disabled={!adminOnly}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="date_of_birth">Date of birth</Label>
+        <Input
+          id="date_of_birth"
+          name="date_of_birth"
           type="date"
-          defaultValue={profile.start_date ?? ""}
-          disabled={!isAdmin}
+          defaultValue={profile.date_of_birth ?? ""}
+          disabled={!adminOnly}
         />
       </div>
 
@@ -63,7 +107,7 @@ export function ProfileEditForm({
           id="department_id"
           name="department_id"
           defaultValue={profile.department_id ?? ""}
-          disabled={!isAdmin}
+          disabled={!adminOnly}
         >
           <option value="">—</option>
           {departments.map((d) => (
@@ -72,6 +116,61 @@ export function ProfileEditForm({
             </option>
           ))}
         </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="job_title">Job title</Label>
+        <Input
+          id="job_title"
+          name="job_title"
+          defaultValue={profile.job_title ?? ""}
+          disabled={!adminOnly}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="start_date">Start date</Label>
+        <Input
+          id="start_date"
+          name="start_date"
+          type="date"
+          defaultValue={profile.start_date ?? ""}
+          disabled={!adminOnly}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="car_registration">Car registration</Label>
+        <Input
+          id="car_registration"
+          name="car_registration"
+          defaultValue={profile.car_registration ?? ""}
+          disabled={!adminOnly}
+        />
+      </div>
+
+      <div className="sm:col-span-2">
+        <Label htmlFor="languages">Languages</Label>
+        <Input
+          id="languages"
+          name="languages"
+          placeholder="English, Spanish, …"
+          defaultValue={(profile.languages ?? []).join(", ")}
+          disabled={!adminOnly}
+        />
+        <p className="mt-1 text-xs text-muted">
+          Comma-separated list.
+        </p>
+      </div>
+
+      <div className="sm:col-span-2">
+        <Label htmlFor="specialisation">Specialisation</Label>
+        <Input
+          id="specialisation"
+          name="specialisation"
+          defaultValue={profile.specialisation ?? ""}
+          disabled={!adminOnly}
+        />
       </div>
 
       {isAdmin && !isSelf && (

@@ -42,7 +42,12 @@ export type Profile = {
   department_id: string | null;
   phone: string | null;
   mobile: string | null;
+  extension: string | null;
+  date_of_birth: string | null;
+  job_title: string | null;
   start_date: string | null;
+  car_registration: string | null;
+  specialisation: string | null;
   avatar_url: string | null;
   languages: string[];
   is_active: boolean;

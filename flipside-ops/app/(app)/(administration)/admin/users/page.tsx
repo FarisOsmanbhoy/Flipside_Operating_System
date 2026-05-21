@@ -7,7 +7,7 @@ import { AdminUsersListClient } from "@/components/admin/AdminUsersListClient";
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
-  await requireLevel(3);
+  const me = await requireLevel(3);
   const supabase = await createClient();
 
   const [{ data: users }, { data: departments }] = await Promise.all([
@@ -34,6 +34,7 @@ export default async function AdminUsersPage() {
       <AdminUsersListClient
         users={users ?? []}
         departments={departments ?? []}
+        currentUserId={me.id}
       />
     </>
   );
