@@ -8,6 +8,7 @@ import {
   type ProfileState,
 } from "@/app/(app)/(company)/staff/actions";
 import type { Profile, Department } from "@/lib/database.types";
+import { formatLanguageList } from "@/lib/format";
 
 export function ProfileEditForm({
   profile,
@@ -155,7 +156,7 @@ export function ProfileEditForm({
           id="languages"
           name="languages"
           placeholder="English, Spanish, …"
-          defaultValue={(profile.languages ?? []).join(", ")}
+          defaultValue={formatLanguageList(profile.languages)}
           disabled={!adminOnly}
         />
         <p className="mt-1 text-xs text-muted">

@@ -43,6 +43,14 @@ function parseLanguages(raw: string | undefined | null): string[] {
     .filter(Boolean);
 }
 
+function emptyDateToNull(v: string | undefined | null): string | null {
+  const trimmed = v?.trim();
+  if (!trimmed) return null;
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return null;
+  return trimmed;
+}
+
 export async function updateProfile(
   _prev: ProfileState,
   formData: FormData,
@@ -81,8 +89,8 @@ export async function updateProfile(
   if (actorIsAdmin) {
     payload.phone = emptyToNull(parsed.data.phone);
     payload.extension = emptyToNull(parsed.data.extension);
-    payload.date_of_birth = emptyToNull(parsed.data.date_of_birth);
-    payload.start_date = emptyToNull(parsed.data.start_date);
+    payload.date_of_birth = emptyDateToNull(parsed.data.date_of_birth);
+    payload.start_date = emptyDateToNull(parsed.data.start_date);
     payload.department_id = emptyToNull(parsed.data.department_id);
     payload.job_title = emptyToNull(parsed.data.job_title);
     payload.car_registration = emptyToNull(parsed.data.car_registration);
@@ -102,15 +110,31 @@ export async function updateProfile(
   // the user can keep signing in. Profile row is updated below in the same
   // request.
   if (actorIsAdmin && typeof payload.email === "string") {
-    const admin = createBrowserlessSupabase(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
-    const { error: authErr } = await admin.auth.admin.updateUserById(
-      parsed.data.id,
-      { email: payload.email as string, email_confirm: true },
-    );
-    if (authErr) return { error: authErr.message };
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", parsed.data.id)
+      .maybeSingle();
+
+    const nextEmail = payload.email as string;
+    if (existing?.email !== nextEmail) {
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceKey) {
+        return {
+          error:
+            "Cannot change email: SUPABASE_SERVICE_ROLE_KEY is not configured on the server.",
+        };
+      }
+      const admin = createBrowserlessSupabase(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceKey,
+      );
+      const { error: authErr } = await admin.auth.admin.updateUserById(
+        parsed.data.id,
+        { email: nextEmail, email_confirm: true },
+      );
+      if (authErr) return { error: authErr.message };
+    }
   }
 
   const { error } = await supabase
@@ -122,6 +146,7 @@ export async function updateProfile(
 
   revalidatePath(`/staff/${parsed.data.id}`);
   revalidatePath("/staff");
+  revalidatePath("/me");
   return { success: true };
 }
 

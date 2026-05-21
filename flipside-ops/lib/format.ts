@@ -1,14 +1,38 @@
 import { formatDistanceToNowStrict, format, differenceInDays } from "date-fns";
 
-export function timeAgo(iso: string | Date | null | undefined) {
-  if (!iso) return "—";
+function toValidDate(iso: string | Date | null | undefined): Date | null {
+  if (iso == null || iso === "") return null;
   const d = typeof iso === "string" ? new Date(iso) : iso;
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Comma-separated display for profiles.languages (text[] or legacy string). */
+export function formatLanguageList(value: unknown): string {
+  return normalizeLanguages(value).join(", ");
+}
+
+export function normalizeLanguages(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((x): x is string => typeof x === "string" && x.trim() !== "");
+  }
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+export function timeAgo(iso: string | Date | null | undefined) {
+  const d = toValidDate(iso);
+  if (!d) return "—";
   return `${formatDistanceToNowStrict(d)} ago`;
 }
 
 export function shortDate(iso: string | Date | null | undefined) {
-  if (!iso) return "—";
-  const d = typeof iso === "string" ? new Date(iso) : iso;
+  const d = toValidDate(iso);
+  if (!d) return "—";
   return format(d, "d MMM yyyy");
 }
 
@@ -23,8 +47,8 @@ export type Freshness = "fresh" | "stale-soon" | "stale";
 export function freshness(
   iso: string | Date | null | undefined,
 ): Freshness {
-  if (!iso) return "stale";
-  const d = typeof iso === "string" ? new Date(iso) : iso;
+  const d = toValidDate(iso);
+  if (!d) return "stale";
   const days = differenceInDays(new Date(), d);
   if (days >= 60) return "stale";
   if (days >= 30) return "stale-soon";

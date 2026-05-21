@@ -10,7 +10,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UserContextPanel } from "@/components/admin/UserContextPanel";
-import { LEVEL_LABELS } from "@/lib/access";
+import { levelLabel } from "@/lib/access";
 import { cn } from "@/lib/format";
 import type { Profile } from "@/lib/database.types";
 
@@ -97,7 +97,7 @@ export function AdminUsersListClient({
       sortValue: (r) => r.access_level,
       accessor: (r) => (
         <Pill tone={levelTone(r.access_level)} dot>
-          L{r.access_level} · {LEVEL_LABELS[r.access_level]}
+          L{r.access_level} · {levelLabel(r.access_level)}
         </Pill>
       ),
     },

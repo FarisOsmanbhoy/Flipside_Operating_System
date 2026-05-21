@@ -20,6 +20,11 @@ export const LEVEL_LABELS: Record<AccessLevel, string> = {
   1: "Editor",
 };
 
+export function levelLabel(level: number): string {
+  if (level === 1 || level === 2 || level === 3) return LEVEL_LABELS[level];
+  return `Level ${level}`;
+}
+
 type Levelled = { access_level: number };
 
 export const isAdmin = (p: Levelled) => p.access_level >= 3;

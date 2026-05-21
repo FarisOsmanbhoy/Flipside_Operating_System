@@ -8,6 +8,7 @@ export {
   type AccessLevel,
   type SessionProfile,
   LEVEL_LABELS,
+  levelLabel,
   isAdmin,
   canManage,
   hasLevel,

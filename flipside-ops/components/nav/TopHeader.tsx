@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { signOut } from "@/app/(auth)/login/actions";
 import {
   isAdmin,
-  LEVEL_LABELS,
+  levelLabel,
   type SessionProfile,
 } from "@/lib/access";
 import { NotificationsPopover } from "@/components/NotificationsPopover";
@@ -95,7 +95,7 @@ export function TopHeader({ profile }: { profile: SessionProfile }) {
                     {profile.email}
                   </div>
                   <div className="text-xs text-brand-700 mt-1">
-                    Level {profile.access_level} · {LEVEL_LABELS[profile.access_level]}
+                    Level {profile.access_level} · {levelLabel(profile.access_level)}
                   </div>
                 </div>
                 <Link

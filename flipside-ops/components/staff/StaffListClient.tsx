@@ -14,7 +14,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StaffFilters } from "@/components/staff/StaffFilters";
-import { LEVEL_LABELS, type AccessLevel } from "@/lib/access";
+import { levelLabel, type AccessLevel } from "@/lib/access";
 
 export type StaffRow = {
   id: string;
@@ -118,7 +118,7 @@ export function StaffListClient({
           </div>
           <div className="text-xs text-muted truncate">{selected.email}</div>
           <Pill tone={levelTone(selected.access_level)} dot className="mt-1">
-            L{selected.access_level} · {LEVEL_LABELS[selected.access_level]}
+            L{selected.access_level} · {levelLabel(selected.access_level)}
           </Pill>
         </div>
       </ContextPanel.Header>

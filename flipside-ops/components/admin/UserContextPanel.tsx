@@ -16,7 +16,7 @@ import {
   setUserActive,
 } from "@/app/(app)/(administration)/admin/users/actions";
 import { SetPasswordButton } from "@/components/admin/SetPasswordButton";
-import { LEVEL_LABELS, type AccessLevel } from "@/lib/access";
+import { levelLabel, type AccessLevel } from "@/lib/access";
 import type { Profile } from "@/lib/database.types";
 
 type Dept = { id: string; name: string };
@@ -86,7 +86,7 @@ export function UserContextPanel({
           <div className="text-xs text-muted truncate">{user.email}</div>
           <div className="mt-1 flex gap-1">
             <Pill tone={levelTone(user.access_level)} dot>
-              L{user.access_level} · {LEVEL_LABELS[user.access_level]}
+              L{user.access_level} · {levelLabel(user.access_level)}
             </Pill>
             {user.is_active ? (
               <Pill tone="success" dot>

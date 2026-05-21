@@ -13,14 +13,14 @@ import {
   Hash,
   Sparkles,
 } from "lucide-react";
-import { getSession, isAdmin, LEVEL_LABELS } from "@/lib/auth";
+import { getSession, isAdmin, levelLabel } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Pill } from "@/components/ui/Pill";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ProfileEditForm } from "@/components/staff/ProfileEditForm";
 import { AvatarUploader } from "@/components/staff/AvatarUploader";
 import { ChangeMyPasswordCard } from "@/components/staff/ChangeMyPasswordCard";
-import { shortDate } from "@/lib/format";
+import { formatLanguageList, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +46,7 @@ export default async function StaffDetailPage({
 
   const canEdit = profile.id === staffMember.id || isAdmin(profile);
   const dept = depts?.find((d) => d.id === staffMember.department_id);
+  const languagesLabel = formatLanguageList(staffMember.languages);
 
   return (
     <>
@@ -85,8 +86,7 @@ export default async function StaffDetailPage({
                   }
                   dot
                 >
-                  L{staffMember.access_level} ·{" "}
-                  {LEVEL_LABELS[staffMember.access_level as 1 | 2 | 3]}
+                  L{staffMember.access_level} · {levelLabel(staffMember.access_level)}
                 </Pill>
                 {!staffMember.is_active && (
                   <Pill tone="danger">Inactive</Pill>
@@ -148,10 +148,10 @@ export default async function StaffDetailPage({
                     {staffMember.car_registration}
                   </div>
                 )}
-                {staffMember.languages && staffMember.languages.length > 0 && (
+                {languagesLabel && (
                   <div className="flex items-center gap-2 text-muted">
                     <Globe size={14} />
-                    {staffMember.languages.join(", ")}
+                    {languagesLabel}
                   </div>
                 )}
                 {staffMember.specialisation && (

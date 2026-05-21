@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, FieldError } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { signInWithPassword, sendMagicLink, type LoginState } from "./actions";
 
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
@@ -46,10 +47,9 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
               Forgot?
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             required
             autoComplete="current-password"
           />
