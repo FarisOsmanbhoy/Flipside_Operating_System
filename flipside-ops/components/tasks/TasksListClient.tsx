@@ -24,6 +24,7 @@ export type TaskRow = {
   status: string;
   priority_id: string | null;
   linked_client_id: string | null;
+  linked_change_request_id: string | null;
   needs_prep: boolean | null;
   private: boolean | null;
   recurrence: string | null;

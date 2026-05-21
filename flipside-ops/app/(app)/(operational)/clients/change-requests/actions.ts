@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { canManage, getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 
 const Schema = z.object({
   client_id: z.uuid(),
@@ -27,48 +27,39 @@ export async function submitChangeRequest(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("change_requests").insert({
-    client_id: parsed.data.client_id,
-    section_type_id: parsed.data.section_type_id || null,
-    requested_by: profile.id,
-    summary: parsed.data.summary,
+  const { data: changeRequest, error } = await supabase
+    .from("change_requests")
+    .insert({
+      client_id: parsed.data.client_id,
+      section_type_id: parsed.data.section_type_id || null,
+      requested_by: profile.id,
+      summary: parsed.data.summary,
+    })
+    .select("id")
+    .single();
+  if (error || !changeRequest) {
+    return { error: error?.message ?? "Submit failed." };
+  }
+
+  // Surface the change request as an admin-only task so it shows up alongside
+  // other work and any admin completing it resolves it for everyone.
+  const { data: client } = await supabase
+    .from("clients")
+    .select("name")
+    .eq("id", parsed.data.client_id)
+    .maybeSingle();
+
+  await supabase.from("tasks").insert({
+    type: "task",
+    title: `Review change request: ${client?.name ?? "client"}`,
+    description: parsed.data.summary,
+    linked_client_id: parsed.data.client_id,
+    linked_change_request_id: changeRequest.id,
+    status: "open",
   });
-  if (error) return { error: error.message };
 
   revalidatePath(`/clients/${parsed.data.client_id}`);
-  revalidatePath("/clients/changes");
+  revalidatePath("/tasks");
   return { success: true };
 }
 
-const DecideSchema = z.object({
-  id: z.uuid(),
-  decision: z.enum(["approved", "rejected"]),
-  decision_notes: z.string().max(1000).optional().or(z.literal("")),
-});
-
-export async function decideChangeRequest(input: {
-  id: string;
-  decision: "approved" | "rejected";
-  decision_notes?: string;
-}) {
-  const profile = await getSession();
-  if (!canManage(profile)) {
-    throw new Error("Only level 2+ users can review change requests.");
-  }
-  const parsed = DecideSchema.safeParse(input);
-  if (!parsed.success) throw new Error("Invalid review payload.");
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("change_requests")
-    .update({
-      status: parsed.data.decision,
-      reviewed_by: profile.id,
-      reviewed_at: new Date().toISOString(),
-      decision_notes: parsed.data.decision_notes || null,
-    })
-    .eq("id", parsed.data.id);
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/clients/changes");
-}

@@ -81,16 +81,44 @@ export async function setTaskStatus(input: {
   id: string;
   status: "open" | "in_progress" | "done" | "cancelled";
 }) {
-  await getSession();
+  const profile = await getSession();
   const supabase = await createClient();
-  const { error } = await supabase
+  const now = new Date().toISOString();
+  const { data: task, error } = await supabase
     .from("tasks")
     .update({
       status: input.status,
-      completed_at: input.status === "done" ? new Date().toISOString() : null,
+      completed_at: input.status === "done" ? now : null,
     })
-    .eq("id", input.id);
+    .eq("id", input.id)
+    .select("linked_change_request_id")
+    .single();
   if (error) throw new Error(error.message);
+
+  // If this task represents a change-request review, mirror the decision onto
+  // the underlying change_requests row so the audit trail stays in sync.
+  if (task?.linked_change_request_id) {
+    if (input.status === "done") {
+      await supabase
+        .from("change_requests")
+        .update({
+          status: "approved",
+          reviewed_by: profile.id,
+          reviewed_at: now,
+        })
+        .eq("id", task.linked_change_request_id);
+    } else if (input.status === "cancelled") {
+      await supabase
+        .from("change_requests")
+        .update({
+          status: "rejected",
+          reviewed_by: profile.id,
+          reviewed_at: now,
+        })
+        .eq("id", task.linked_change_request_id);
+    }
+  }
+
   revalidatePath("/tasks");
   revalidatePath(`/tasks/${input.id}`);
   revalidatePath("/");

@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth";
+import { getSession, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { TasksListClient } from "@/components/tasks/TasksListClient";
@@ -19,13 +19,16 @@ export default async function TasksPage({
   let query = supabase
     .from("tasks")
     .select(
-      "id, type, title, description, assigned_to, due_date, status, priority_id, linked_client_id, needs_prep, private, recurrence, created_at",
+      "id, type, title, description, assigned_to, due_date, status, priority_id, linked_client_id, linked_change_request_id, needs_prep, private, recurrence, created_at",
     )
     .eq("type", tab)
     .order("due_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
   if (mine === "1") query = query.eq("assigned_to", profile.id);
+
+  // Change-request review tasks are only visible to level 3 admins.
+  if (!isAdmin(profile)) query = query.is("linked_change_request_id", null);
 
   const [
     { data: tasks },

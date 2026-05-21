@@ -28,6 +28,8 @@ export type IndustryAlertCategory = Lookup;
 export type NoticeCategory = Lookup;
 export type PasswordCategory = Lookup;
 export type ManualCategory = Lookup;
+export type SupplierStatus = Lookup;
+export type SupplierType = Lookup;
 
 export type Password = {
   id: string;
@@ -136,6 +138,49 @@ export type ClientSubcontractor = {
   notes: string | null;
 };
 
+export type SupplierSectionType = Lookup & {
+  slug: string;
+  description: string | null;
+  icon: string | null;
+  required_level: AccessLevel;
+};
+
+export type Supplier = {
+  id: string;
+  name: string;
+  type_id: string | null;
+  status_id: string | null;
+  location: string | null;
+  since_date: string | null;
+  assigned_pm_id: string | null;
+  important_info: string | null;
+  logo_url: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupplierSectionData = {
+  id: string;
+  supplier_id: string;
+  section_type_id: string;
+  data: Record<string, unknown>;
+  last_reviewed_at: string | null;
+  updated_at: string;
+};
+
+export type SupplierContact = {
+  id: string;
+  supplier_id: string;
+  name: string;
+  role: string | null;
+  email: string | null;
+  phone: string | null;
+  preferred_channel: string | null;
+  notes: string | null;
+  display_order: number;
+};
+
 export type Task = {
   id: string;
   type: TaskType;
@@ -150,6 +195,7 @@ export type Task = {
   alert_category_id: string | null;
   notice_category_id: string | null;
   linked_client_id: string | null;
+  linked_change_request_id: string | null;
   needs_prep: boolean;
   private: boolean;
   recurrence: Recurrence;

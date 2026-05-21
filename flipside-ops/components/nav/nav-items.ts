@@ -52,9 +52,8 @@ export const NAV: NavGroup[] = [
     label: "Operational",
     icon: Briefcase,
     items: [
-      { label: "Clients", href: "/clients" },
-      { label: "Change Requests", href: "/clients/changes" },
-      { label: "New Client", href: "/clients/new", minLevel: 2 },
+      { label: "Client Data", href: "/clients" },
+      { label: "Supplier Data", href: "/suppliers" },
     ],
   },
 ];
@@ -89,9 +88,10 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   "/admin/reports": "Reports",
   "/admin/suggestions": "Suggestions & Feedback",
   "/admin/training": "Training",
-  "/clients": "Clients",
+  "/clients": "Client Data",
   "/clients/new": "New Client",
-  "/clients/changes": "Change Requests",
+  "/suppliers": "Supplier Data",
+  "/suppliers/new": "New Supplier",
 };
 
 export const GROUP_FOR_PATH: { match: RegExp; group: string }[] = [
@@ -103,4 +103,5 @@ export const GROUP_FOR_PATH: { match: RegExp; group: string }[] = [
   { match: /^\/manuals/, group: "Administration" },
   { match: /^\/admin/, group: "Administration" },
   { match: /^\/clients/, group: "Operational" },
+  { match: /^\/suppliers/, group: "Operational" },
 ];
