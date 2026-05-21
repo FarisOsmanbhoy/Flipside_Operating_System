@@ -1,16 +1,29 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/format";
+
+type TabKey = "task" | "notice" | "industry_alert" | "recurring_template";
+
+const NEW_LABEL: Record<TabKey, string> = {
+  task: "New task",
+  notice: "New notice",
+  industry_alert: "New alert",
+  recurring_template: "New recurring",
+};
 
 export function TasksFilters({
   initialQ,
   initialMine,
+  tab,
 }: {
   initialQ?: string;
   initialMine?: string;
+  tab: TabKey;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -27,6 +40,13 @@ export function TasksFilters({
 
   return (
     <div className="space-y-5">
+      <Link href={`/tasks/new?type=${tab}`} className="block">
+        <Button className="w-full">
+          <Plus size={16} />
+          {NEW_LABEL[tab]}
+        </Button>
+      </Link>
+
       <div>
         <label className="block text-xs font-semibold uppercase text-muted tracking-wide mb-2">
           Search

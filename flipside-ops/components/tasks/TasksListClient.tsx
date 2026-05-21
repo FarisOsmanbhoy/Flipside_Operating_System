@@ -248,7 +248,13 @@ export function TasksListClient({
 
   return (
     <ThreePaneLayout
-      filters={<TasksFilters initialQ={q} initialMine={mine} />}
+      filters={
+        <TasksFilters
+          initialQ={q}
+          initialMine={mine}
+          tab={tab as "task" | "notice" | "industry_alert" | "recurring_template"}
+        />
+      }
       context={context}
       contextOpen={contextOpen}
       onContextOpenChange={setContextOpen}

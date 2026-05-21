@@ -1,9 +1,6 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/Button";
 import { TasksListClient } from "@/components/tasks/TasksListClient";
 
 export const dynamic = "force-dynamic";
@@ -49,17 +46,7 @@ export default async function TasksPage({
 
   return (
     <>
-      <PageHeader
-        title="Tasks & Notices"
-        actions={
-          <Link href={`/tasks/new?type=${tab}`}>
-            <Button>
-              <Plus size={16} />
-              New {labelFor(tab)}
-            </Button>
-          </Link>
-        }
-      />
+      <PageHeader title="Tasks & Notices" />
 
       <TasksListClient
         rows={filtered}
@@ -74,12 +61,3 @@ export default async function TasksPage({
   );
 }
 
-function labelFor(t: TabKey) {
-  return t === "task"
-    ? "task"
-    : t === "notice"
-      ? "notice"
-      : t === "industry_alert"
-        ? "industry alert"
-        : "recurring";
-}

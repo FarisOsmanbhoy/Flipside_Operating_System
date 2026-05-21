@@ -178,17 +178,16 @@ export function PasswordsListClient({
         </div>
       </div>
       {canEdit && (
-        <button
-          type="button"
+        <Button
+          className="w-full"
           onClick={() => {
             setAddForm(blankForm(categories[0]?.id ?? ""));
             setAddOpen(true);
           }}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-600 transition-colors"
         >
           <Plus size={16} />
-          Add New Password
-        </button>
+          Add new password
+        </Button>
       )}
     </div>
   );

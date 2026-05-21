@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireLevel } from "@/lib/auth";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { InviteUserButton } from "@/components/admin/InviteUserButton";
 import { AdminUsersListClient } from "@/components/admin/AdminUsersListClient";
 
 export const dynamic = "force-dynamic";
@@ -25,11 +24,7 @@ export default async function AdminUsersPage() {
 
   return (
     <>
-      <PageHeader
-        title="Users"
-        subtitle={`${users?.length ?? 0} total`}
-        actions={<InviteUserButton departments={departments ?? []} />}
-      />
+      <PageHeader title="Users" subtitle={`${users?.length ?? 0} total`} />
 
       <AdminUsersListClient
         users={users ?? []}

@@ -199,14 +199,10 @@ export function ManualsListClient({
         </div>
       </div>
       {canEdit && (
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-600 transition-colors"
-        >
+        <Button className="w-full" onClick={() => setAddOpen(true)}>
           <Plus size={16} />
-          Add New File
-        </button>
+          Add new file
+        </Button>
       )}
     </div>
   );

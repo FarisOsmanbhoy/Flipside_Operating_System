@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
-import { Search, XCircle } from "lucide-react";
+import { Plus, Search, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/format";
 
 type Status = { id: string; name: string };
@@ -11,10 +13,12 @@ export function ClientsFilters({
   statuses,
   initialQ,
   initialStatus,
+  canEdit,
 }: {
   statuses: Status[];
   initialQ?: string;
   initialStatus?: string;
+  canEdit: boolean;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -31,6 +35,15 @@ export function ClientsFilters({
 
   return (
     <div className="space-y-5">
+      {canEdit && (
+        <Link href="/clients/new" className="block">
+          <Button className="w-full">
+            <Plus size={16} />
+            New client
+          </Button>
+        </Link>
+      )}
+
       <div>
         <label className="block text-xs font-semibold uppercase text-muted tracking-wide mb-2">
           Search

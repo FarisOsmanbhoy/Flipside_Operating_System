@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { InviteUserButton } from "@/components/admin/InviteUserButton";
 import { UserContextPanel } from "@/components/admin/UserContextPanel";
 import { levelLabel } from "@/lib/access";
 import { cn } from "@/lib/format";
@@ -131,6 +132,8 @@ export function AdminUsersListClient({
     <ThreePaneLayout
       filters={
         <div className="space-y-5">
+          <InviteUserButton departments={departments} />
+
           <div>
             <label className="block text-xs font-semibold uppercase text-muted tracking-wide mb-2">
               Search

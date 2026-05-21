@@ -10,6 +10,8 @@ const WIDE_ROUTES: RegExp[] = [
   /^\/admin\/users\/?$/,
   /^\/clients\/?$/,
   /^\/tasks\/?$/,
+  /^\/passwords\/?$/,
+  /^\/manuals\/?$/,
 ];
 
 export function PageShell({ children }: { children: ReactNode }) {

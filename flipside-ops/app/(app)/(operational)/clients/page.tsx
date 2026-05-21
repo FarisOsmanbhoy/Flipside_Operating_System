@@ -1,9 +1,6 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
 import { canManage, getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/Button";
 import { ClientsListClient } from "@/components/clients/ClientsListClient";
 
 export const dynamic = "force-dynamic";
@@ -53,16 +50,6 @@ export default async function ClientsPage({
       <PageHeader
         title="Clients"
         subtitle={`${filtered.length} of ${clients?.length ?? 0}`}
-        actions={
-          canCreate ? (
-            <Link href="/clients/new">
-              <Button>
-                <Plus size={16} />
-                New client
-              </Button>
-            </Link>
-          ) : undefined
-        }
       />
 
       <ClientsListClient

@@ -223,6 +223,7 @@ export function ClientsListClient({
           statuses={statuses}
           initialQ={initialQ}
           initialStatus={initialStatus}
+          canEdit={canEdit}
         />
       }
       context={context}
