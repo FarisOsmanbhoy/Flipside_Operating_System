@@ -15,6 +15,8 @@ const TABLES = [
   { key: "task_categories", label: "Task categories" },
   { key: "industry_alert_categories", label: "Industry alert categories" },
   { key: "notice_categories", label: "Notice categories" },
+  { key: "password_categories", label: "Password categories" },
+  { key: "manual_categories", label: "Manual categories" },
 ] as const;
 
 export default async function AdminConfigPage() {

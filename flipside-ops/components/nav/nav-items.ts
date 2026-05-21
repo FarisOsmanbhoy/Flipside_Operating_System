@@ -38,6 +38,8 @@ export const NAV: NavGroup[] = [
     icon: ClipboardList,
     items: [
       { label: "Tasks & Notices", href: "/tasks" },
+      { label: "Passwords", href: "/passwords" },
+      { label: "Manuals & Guides", href: "/manuals" },
       { label: "Audit Log", href: "/admin/audit", minLevel: 3 },
       { label: "Users", href: "/admin/users", minLevel: 3 },
       { label: "Config", href: "/admin/config", minLevel: 3 },
@@ -78,6 +80,8 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   "/company/profile": "Company Profile",
   "/tasks": "Tasks & Notices",
   "/tasks/new": "New",
+  "/passwords": "Passwords",
+  "/manuals": "Manuals & Guides",
   "/admin": "Administration",
   "/admin/audit": "Audit Log",
   "/admin/users": "Users",
@@ -95,6 +99,8 @@ export const GROUP_FOR_PATH: { match: RegExp; group: string }[] = [
   { match: /^\/me/, group: "Company" },
   { match: /^\/company/, group: "Company" },
   { match: /^\/tasks/, group: "Administration" },
+  { match: /^\/passwords/, group: "Administration" },
+  { match: /^\/manuals/, group: "Administration" },
   { match: /^\/admin/, group: "Administration" },
   { match: /^\/clients/, group: "Operational" },
 ];

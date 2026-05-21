@@ -14,6 +14,8 @@ const ALLOWED = new Set([
   "task_categories",
   "industry_alert_categories",
   "notice_categories",
+  "password_categories",
+  "manual_categories",
 ]);
 
 const guard = (table: string) => {

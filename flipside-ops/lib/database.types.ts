@@ -26,6 +26,38 @@ export type TaskPriority = Lookup;
 export type TaskCategory = Lookup;
 export type IndustryAlertCategory = Lookup;
 export type NoticeCategory = Lookup;
+export type PasswordCategory = Lookup;
+export type ManualCategory = Lookup;
+
+export type Password = {
+  id: string;
+  category_id: string;
+  system: string;
+  dept_id: string | null;
+  username: string | null;
+  password: string | null;
+  web_address: string | null;
+  further_info: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Manual = {
+  id: string;
+  category_id: string;
+  title: string;
+  company: string | null;
+  reference: string | null;
+  revision_no: number | null;
+  published_at: string | null;
+  author_id: string | null;
+  storage_path: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  mime_type: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type ClientSectionType = Lookup & {
   slug: string;
