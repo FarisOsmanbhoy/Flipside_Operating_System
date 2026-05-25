@@ -58,20 +58,33 @@ export function InviteUserButton({
     }
 
     start(async () => {
-      const res = await fetch("/api/admin/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.get("email"),
-          password,
-          full_name: formData.get("full_name"),
-          access_level: Number(formData.get("access_level")),
-          department_id: formData.get("department_id") || undefined,
-        }),
-      });
+      let res: Response;
+      try {
+        res = await fetch("/api/admin/invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.get("email"),
+            password,
+            full_name: formData.get("full_name"),
+            access_level: Number(formData.get("access_level")),
+            department_id: formData.get("department_id") || undefined,
+          }),
+        });
+      } catch (e) {
+        setError(
+          e instanceof Error
+            ? `Network error: ${e.message}`
+            : "Network error reaching /api/admin/invite.",
+        );
+        return;
+      }
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? "Invite failed.");
+        setError(
+          json.error ??
+            `Add new user failed (HTTP ${res.status}). Check server logs.`,
+        );
         return;
       }
       push({ tone: "success", message: "Account created." });
@@ -103,9 +116,9 @@ export function InviteUserButton({
           setOpen(true);
         }}
       >
-        <UserPlus size={16} /> Invite user
+        <UserPlus size={16} /> Add new user
       </Button>
-      <Modal open={open} onClose={close} title="Invite a user">
+      <Modal open={open} onClose={close} title="Add a new user">
         {success ? (
           <div className="space-y-4">
             <p className="text-sm">
