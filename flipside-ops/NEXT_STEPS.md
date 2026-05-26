@@ -5,7 +5,7 @@ Claude session can pick up exactly where the previous one left off.
 
 **Project root:** `C:\Users\osman\Documents\2. Projects\Flipside\FLIPSIDE OPERATING SYSTEM\flipside-ops`
 **Supabase project ref:** `ztikdgsygcisalbnqpjh`
-**GitHub repo (public):** `https://github.com/FarisOsmanbhoy/Flipside_Operating_System` — `main` at commit `3656ed6`
+**GitHub repo (public):** `https://github.com/FarisOsmanbhoy/Flipside_Operating_System` — `main` at commit `22d12c3`
 **Bootstrap admin email** (auto-seeded on first sign-in): `farisosmanbhoy01@gmail.com`
 **Spec source of truth:** Notion page "FlipSide Internal Ops Tool — Design Spec (v1)" (id `36486ce8-4d64-811f-9056-c8f072052e01`)
 
@@ -13,9 +13,9 @@ Claude session can pick up exactly where the previous one left off.
 
 ## ✅ Done
 
-- Scaffolded Next.js 16 + Tailwind v4 + TypeScript at `flipside-ops/` (23+ routes)
+- Scaffolded Next.js 16 + Tailwind v4 + TypeScript at `flipside-ops/` (30+ routes)
 - Brand theme: teal `#005470` primary, lime `#c2d500` accent, DM Sans + Josefin Sans
-- 11 Supabase migrations on disk (`0001`..`0009`, `0011_access_levels`, `0012_revoke_anon_from_auth_helpers`); all applied live to `ztikdgsygcisalbnqpjh`
+- 14 Supabase migrations on disk (`0001`..`0009`, `0011_access_levels`, `0012_revoke_anon_from_auth_helpers`, `0013_profile_fields_expansion`, `0014_password_metadata`, `0015_passwords_and_manuals`, `0016_suppliers`); all applied live to `ztikdgsygcisalbnqpjh`
 - Auth flow: login (password + magic link), forgot, reset, callback
 - App shell: TopHeader with universal search (Ctrl+K) + notifications popover + avatar dropdown; MainNav with click-toggle dropdowns + mobile hamburger
 - All 3 v1 modules: Staff, Clients (sections + contacts + subs + request-change + approval queue), Tasks (tabs + new + detail + comments + recurring conversion)
@@ -46,6 +46,17 @@ Claude session can pick up exactly where the previous one left off.
   - TS: new `lib/access.ts` (browser-safe primitives: `AccessLevel`, `SessionProfile`, `LEVEL_LABELS`, `isAdmin`, `canManage`, `hasLevel`); `lib/auth.ts` stays server-only and re-exports
   - `requireRole(...allowed)` → `requireLevel(min: AccessLevel)`
   - Server action renamed `setUserRole` → `setUserLevel`; UI shows "Level 3 — Admin / Level 2 — Manager / Level 1 — Editor"
+
+### Since `3656ed6` (PROPS redesign)
+
+- **Admin onboarding + profile expansion** (`a671828`): extension, DOB, job title, car reg, specialisation fields on `profiles` (migration `0013`); avatar uploads wired through Supabase storage; admin can populate these on staff records.
+- **PROPS-style left sidebar on Home** (`90ff8fd`): brand card + profile card in the dashboard sidebar; "+ New notice" is now the default top-nav action.
+- **Self-service password change + recovery-link fix** (`8e45b62`, `553f154`): `components/staff/ChangeMyPasswordCard.tsx`, `password_set_at` metadata (migration `0014`), login password visibility toggle, profile save crash fixed.
+- **FLIGHTWORX home layout** (`f1970c6`): full dashboard refresh — `AlertRibbon`, `BrandCard`, `ProfileCard`, `IndustryInfoCard`, `TasksNoticesCard`.
+- **Passwords vault + Manuals & Guides** (`7a25973`): two new domains under Administration, backed by migration `0015`; both have soft-configurable categories editable at `/admin/config`. Pages live at `/passwords` and `/manuals`.
+- **Teal sidebar Add buttons + wider passwords/manuals** (`3b3a7d4`): consistent "+ Add" placement across all list pages; passwords/manuals layouts widened.
+- **Suppliers domain + level-3 PM reassignment + change-requests as tasks** (`7cd3656`): new `/suppliers` parallel to `/clients` (migration `0016`, no sub-suppliers); only Level 3 can reassign a client/supplier's assigned PM; change requests now flow through Tasks instead of a standalone list page.
+- **Admin invite diagnostics + smoke script** (`22d12c3`): invite button renamed; failure modes logged with actionable messages; `scripts/smoke-admin.ts` added (run with `npx tsx scripts/smoke-admin.ts`).
 
 ---
 
@@ -89,7 +100,7 @@ Verify each module:
 - `/admin/users` — invite a second test user at **Level 1 (Editor)**; sign in incognito
 - `/clients/new` — create a test client; edit Important info; add a contact + subcontractor
 - As Level 1: open the client, confirm no edit buttons, file a request change
-- As Level 3: approve at `/clients/changes`; verify audit log entry at `/admin/audit`
+- As Level 3: find the auto-created change-request task at `/tasks` (filter by Type = Change request), action it, mark Done; verify audit log entry at `/admin/audit`
 - `/tasks/new` — create a task assigned to yourself; verify it appears on `/` dashboard
 - Universal search (Ctrl+K): type a client name → result appears → clicking navigates
 - Notifications bell: assign yourself a task due soon → unread badge → popover lists it
@@ -106,14 +117,14 @@ Three remaining `WARN`s flag that `is_admin()`, `is_manager_or_admin()`, `auth_l
 
 This needs careful sequencing (alter policies before dropping functions, or drop policies + recreate). Plan as a single migration.
 
-### 6. Finish the PROPS stub pages
-The redesign shipped placeholders for these — they render an `EmptyState`:
+### 6. Finish the remaining stub pages
+These still render an `EmptyState` (verified at HEAD):
 - **`/company/profile`** — needs a `company_profile` table + editable form
 - **`/admin/reports`** — saved queries / scheduled exports; no DB or API yet
 - **`/admin/suggestions`** — paired with the "Suggestions & Feedback" dashboard card; lightweight inbox
 - **`/admin/training`** — training modules + completion tracking per staff member
 - **Dashboard "Polls" card** — `ComingSoonCard` with no backing route or table
-- **Dynamic breadcrumb labels** — show truncated UUIDs for `/clients/[id]` / `/tasks/[id]`; needs server-rendered or context-fed labels
+- **Dynamic breadcrumb labels** — show truncated UUIDs for `/clients/[id]` / `/suppliers/[id]` / `/tasks/[id]`; needs server-rendered or context-fed labels
 
 ### 7. (Optional) Wire Sentry DSN
 - Create a Sentry account + project for Node.js / Next.js
@@ -163,12 +174,12 @@ flipside-ops/
 ├── app/
 │   ├── (auth)/                  ← login, forgot-password, reset-password (brand gradient layout)
 │   ├── (app)/                   ← all authenticated pages (shell: TopHeader + MainNav + PageShell)
-│   │   ├── page.tsx             ← home dashboard (sidebar + hero tabbed card + bottom widgets)
-│   │   ├── (company)/staff/, me/, company/profile/
-│   │   ├── (administration)/tasks/, admin/{users,config,audit,reports,suggestions,training}/
-│   │   └── (operational)/clients/
+│   │   ├── page.tsx             ← home dashboard (PROPS sidebar + tabbed hero card + bottom widgets)
+│   │   ├── (company)/           ← staff/, me/, company/profile/
+│   │   ├── (administration)/    ← tasks/, passwords/, manuals/, admin/{users,config,audit,reports,suggestions,training}/
+│   │   └── (operational)/       ← clients/ (incl. change-requests/ actions), suppliers/
 │   ├── api/
-│   │   ├── admin/invite/        ← invite user via Supabase Admin API (accepts access_level)
+│   │   ├── admin/               ← invite + level-set endpoints (service-role)
 │   │   ├── search/              ← universal search endpoint (CommandPalette)
 │   │   └── notifications/       ← bell popover endpoint
 │   └── auth/callback/route.ts   ← Supabase magic-link callback
@@ -176,25 +187,30 @@ flipside-ops/
 │   ├── ui/                      ← shared primitives + DataTable + Pill `dot` variant
 │   ├── nav/                     ← TopHeader, MainNav (click-toggle + hamburger), Breadcrumbs, PageShell, nav-items
 │   ├── layout/                  ← ThreePaneLayout, ContextPanel
-│   ├── dashboard/               ← TasksNoticesCard, AlertRibbon, IndustryInfoPanel, ComingSoonCard
-│   ├── clients/                 ← ClientsFilters, ClientsListClient, ChangeRequestsListClient, …
+│   ├── dashboard/               ← BrandCard, ProfileCard, IndustryInfoCard, TasksNoticesCard, AlertRibbon
+│   ├── clients/                 ← ClientsFilters, ClientsListClient, AssignedPMPicker, SectionBodyEditor, …
+│   ├── suppliers/               ← SuppliersFilters, SuppliersListClient, SupplierAssignedPMPicker, …
 │   ├── tasks/                   ← TasksFilters, TasksListClient, TaskForm, CommentsThread
-│   ├── staff/                   ← StaffFilters, StaffListClient, ProfileEditForm
-│   ├── admin/                   ← AdminUsersListClient, UserContextPanel, AuditListClient, InviteUserButton, LookupEditor
+│   ├── staff/                   ← StaffFilters, StaffListClient, ProfileEditForm, ChangeMyPasswordCard
+│   ├── admin/                   ← AdminUsersListClient, UserContextPanel, AuditListClient, InviteUserButton, SetPasswordButton, LookupEditor
 │   ├── CommandPalette.tsx, RealtimeRefresh.tsx, NotificationsPopover.tsx
 ├── lib/
 │   ├── supabase/{server,client,proxy}.ts
 │   ├── access.ts                ← AccessLevel, SessionProfile, LEVEL_LABELS, isAdmin/canManage/hasLevel (browser-safe)
 │   ├── auth.ts                  ← server-only: getSession, requireLevel (re-exports from access.ts)
+│   ├── email/resend.ts          ← Resend client (no-op until key set)
+│   ├── validators/              ← shared Zod schemas
 │   ├── notifications.ts         ← bell data source
 │   ├── format.ts                ← date/freshness/cn helpers
 │   └── database.types.ts        ← hand-rolled DB types (access_level / required_level)
 ├── proxy.ts                     ← Next 16 proxy (session refresh)
 ├── instrumentation.ts           ← Sentry init entrypoint
 ├── sentry.{client,server,edge}.config.ts
-├── supabase/migrations/         ← 0001..0009, 0011_access_levels, 0012_revoke_anon_from_auth_helpers
+├── scripts/smoke-admin.ts       ← invite smoke test (run with `npx tsx`)
+├── supabase/migrations/         ← 0001..0009, 0011..0016 (14 files; 0010 intentionally skipped)
 ├── public/brand/                ← logo.jpg, favicon.jpg
-├── README.md                    ← full setup walkthrough + handoff docs
+├── README.md                    ← engineering setup + access-level + handoff docs
+├── USER_GUIDE.md                ← end-user handbook: navigation map + SOPs + glossary
 └── NEXT_STEPS.md                ← this file
 ```
 

@@ -34,7 +34,7 @@ Sentry vars are optional — leave blank to skip error monitoring locally.
 
 ### 3. Apply database migrations
 
-The 8 SQL files in `supabase/migrations/` define the entire schema (tables, RLS policies, triggers, storage buckets, seeded lookups).
+The 14 SQL files in `supabase/migrations/` (numbered `0001`–`0009`, `0011`–`0016`) define the entire schema — tables, RLS policies, triggers, storage buckets, seeded lookups, the `access_level` model, passwords vault, manuals/guides, and suppliers.
 
 If you're picking this up fresh and the project doesn't have them applied yet, use the Supabase MCP `apply_migration` tool or run them via the SQL editor in order.
 
@@ -57,40 +57,50 @@ Visit `http://localhost:3000` — you'll be redirected to `/login`. Sign in via 
 
 ---
 
-## Bootstrap admin
+## Access levels & bootstrap admin
 
-The first time `farisosmanbhoy01@gmail.com` signs in, the `handle_new_auth_user` trigger (migration `0002`) auto-promotes that account to `admin` role. Every other new signup defaults to `editor`.
+The role enum has been replaced by an integer `profiles.access_level` with three values:
+
+| Level | Label | What it can do |
+|---|---|---|
+| `3` | Admin | Everything: invite users, edit configs, approve change requests, view audit log |
+| `2` | Manager | Edit clients/suppliers/tasks; cannot reach `/admin/*` |
+| `1` | Editor | Read-only across most domains; can file change requests; manage own profile + tasks assigned to them |
+
+The first time `farisosmanbhoy01@gmail.com` signs in, the `handle_new_auth_user` trigger (migration `0002`, updated by `0011_access_levels`) auto-promotes that account to `access_level = 3`. Every other new signup defaults to `access_level = 1` (Editor).
 
 ### How to add a new admin
 
 **After the first admin exists** (recommended):
-- Sign in as admin → `/admin/users` → invite the new admin's email → after they sign in, promote their role to `admin` from the same page.
+- Sign in as admin → `/admin/users` → invite the new admin's email → after they sign in, promote their level to **3 — Admin** inline from the same page.
 
 **Before the first admin exists** (recovery):
 ```sql
-update public.profiles set role = 'admin' where lower(email) = 'newowner@example.com';
+update public.profiles set access_level = 3 where lower(email) = 'newowner@example.com';
 ```
 
 ### Handoff to the real FlipSide owner
 
 When you're ready to hand over:
-1. Have the new owner sign in (they'll land as `editor`).
-2. As current admin, go to `/admin/users` and change their role to `admin`.
+1. Have the new owner sign in (they'll land at Level 1 — Editor).
+2. As current admin, go to `/admin/users` and change their level to **3 — Admin**.
 3. They'll now see the `/admin` menu and can manage everything.
-4. Optional: downgrade your own account to `editor` (or deactivate it) once handoff is complete.
+4. Optional: downgrade your own account to Level 1 (or deactivate it) once handoff is complete.
 
-The bootstrap email in migration `0002` only matters for the *very first* sign-in — after that, role management is entirely UI-driven.
+The bootstrap email in migration `0002` only matters for the *very first* sign-in — after that, level management is entirely UI-driven.
 
 ---
 
 ## Architecture conventions
 
 - **Server Components by default.** Add `"use client"` only for interactive bits.
-- **Server Actions** live in `actions.ts` next to the route that uses them. Always call `getSession()` or `requireRole(...)` at the top.
-- **RLS is the gate, UI is the affordance.** Frontend hides edit buttons by role; the database refuses unauthorised writes regardless.
-- **Soft-configurable lookups** (statuses, types, priorities…) live in DB tables editable at `/admin/config`. Don't hardcode option lists.
+- **Server Actions** live in `actions.ts` next to the route that uses them. Always call `getSession()` or `requireLevel(min)` at the top.
+- **`lib/access.ts` is the browser-safe entry point** for capability checks (`isAdmin`, `canManage`, `hasLevel`, `LEVEL_LABELS`). `lib/auth.ts` is `server-only` and re-exports server bits like `getSession` / `requireLevel`. Never import `lib/auth.ts` from a client component.
+- **RLS is the gate, UI is the affordance.** Frontend hides edit buttons by level; the database refuses unauthorised writes regardless.
+- **Soft-configurable lookups** (statuses, types, priorities, password categories, manual categories, …) live in DB tables editable at `/admin/config`. Don't hardcode option lists.
 - **Audit triggers** are attached at the DB level (migration `0007`). New tables that should be audited need a `trg_audit_<table>` trigger.
 - **Tailwind v4** uses CSS-based theme tokens in `app/globals.css` (`@theme { ... }`). No `tailwind.config.ts`.
+- **PROPS three-pane list layout** (`ThreePaneLayout` + `DataTable` + `ContextPanel`) is the canonical pattern for list pages: filters left, table centre, context panel right (slideover below `xl`).
 
 ### Next.js 16 specifics
 - `params` and `searchParams` are `Promise<...>` — always `await`
@@ -105,31 +115,42 @@ The bootstrap email in migration `0002` only matters for the *very first* sign-i
 ```
 flipside-ops/
 ├── app/
-│   ├── (auth)/           ← login, forgot-password, reset-password
-│   ├── (app)/            ← all authenticated pages
-│   │   ├── page.tsx      ← home dashboard
-│   │   ├── staff/, clients/, tasks/, me/, admin/
+│   ├── (auth)/                       ← login, forgot-password, reset-password (brand gradient layout)
+│   ├── (app)/                        ← all authenticated pages (TopHeader + MainNav + PageShell)
+│   │   ├── page.tsx                  ← home dashboard (PROPS sidebar + tabbed hero card)
+│   │   ├── (company)/                ← staff/, me/, company/profile/
+│   │   ├── (administration)/         ← tasks/, passwords/, manuals/, admin/{users,config,audit,reports,suggestions,training}/
+│   │   └── (operational)/            ← clients/, suppliers/
 │   ├── api/
-│   │   ├── search/       ← universal search endpoint
-│   │   └── notifications/← bell popover endpoint
-│   └── auth/callback/    ← Supabase magic-link callback
+│   │   ├── admin/                    ← invite + level-set endpoints (service-role)
+│   │   ├── search/                   ← universal search endpoint (CommandPalette)
+│   │   └── notifications/            ← bell popover endpoint
+│   └── auth/callback/                ← Supabase magic-link callback
 ├── components/
-│   ├── ui/                          ← shared primitives
-│   ├── clients/, tasks/, staff/, admin/
-│   ├── TopNav.tsx, RealtimeRefresh.tsx,
-│   ├── UniversalSearch.tsx, NotificationsPopover.tsx
+│   ├── ui/                           ← shared primitives + DataTable, ThreePaneLayout helpers
+│   ├── nav/                          ← TopHeader, MainNav, Breadcrumbs, PageShell, nav-items
+│   ├── layout/                       ← ThreePaneLayout, ContextPanel
+│   ├── dashboard/                    ← BrandCard, ProfileCard, IndustryInfoCard, TasksNoticesCard, AlertRibbon
+│   ├── clients/, suppliers/, tasks/, staff/, admin/
+│   ├── CommandPalette.tsx, RealtimeRefresh.tsx, NotificationsPopover.tsx
 ├── lib/
 │   ├── supabase/{server,client,proxy}.ts
-│   ├── auth.ts           ← getSession, requireRole
-│   ├── notifications.ts  ← bell data source
-│   ├── format.ts         ← date/freshness/cn helpers
-│   └── database.types.ts ← hand-rolled DB types
-├── proxy.ts              ← Next 16 proxy (session refresh)
-├── instrumentation.ts    ← Sentry init
+│   ├── access.ts                     ← browser-safe: AccessLevel, isAdmin, canManage, hasLevel, LEVEL_LABELS
+│   ├── auth.ts                       ← server-only: getSession, requireLevel
+│   ├── email/resend.ts               ← Resend client (no-op until key set)
+│   ├── validators/                   ← shared Zod schemas
+│   ├── notifications.ts              ← bell data source
+│   ├── format.ts                     ← date/freshness/cn helpers
+│   └── database.types.ts             ← hand-rolled DB types (access_level / required_level)
+├── proxy.ts                          ← Next 16 proxy (session refresh)
+├── instrumentation.ts                ← Sentry init
 ├── sentry.{client,server,edge}.config.ts
-├── supabase/migrations/  ← 0001..0010.sql — apply in order
+├── scripts/smoke-admin.ts            ← invite smoke test (run with tsx)
+├── supabase/migrations/              ← 0001..0009, 0011..0016 — apply in order
 └── public/brand/
 ```
+
+> **End-user docs** live in [`USER_GUIDE.md`](./USER_GUIDE.md) — navigation map, SOPs for staff and admins, glossary, FAQ.
 
 ---
 
