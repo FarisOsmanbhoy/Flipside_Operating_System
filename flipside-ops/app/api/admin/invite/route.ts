@@ -68,6 +68,10 @@ export async function POST(req: NextRequest) {
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    console.log("[admin/invite] env-check", {
+      hasServiceRole: Boolean(serviceRoleKey),
+      hasUrl: Boolean(supabaseUrl),
+    });
     if (!serviceRoleKey || !supabaseUrl) {
       return fail(
         "missing_service_role",
