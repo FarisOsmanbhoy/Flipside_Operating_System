@@ -1,6 +1,7 @@
-import { canManage, getSession } from "@/lib/auth";
+import { canManage, getSession, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ImportButton } from "@/components/import/ImportButton";
 import { SuppliersListClient } from "@/components/suppliers/SuppliersListClient";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export default async function SuppliersPage({
       <PageHeader
         title="Suppliers"
         subtitle={`${filtered.length} of ${suppliers?.length ?? 0}`}
+        actions={isAdmin(profile) ? <ImportButton domain="suppliers" /> : null}
       />
 
       <SuppliersListClient

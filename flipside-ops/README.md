@@ -29,12 +29,13 @@ Fill from the [Supabase dashboard → Project Settings → API](https://supabase
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | "anon public" key |
 | `SUPABASE_SERVICE_ROLE_KEY` | "service_role secret" key (server-only) |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` for dev, deploy URL in prod |
+| `ANTHROPIC_API_KEY` | Anthropic Console → API keys. Powers the AI-assisted import wizard and `/admin/diagnostics`. Leave blank to disable AI; imports still work with manual column mapping. |
 
 Sentry vars are optional — leave blank to skip error monitoring locally.
 
 ### 3. Apply database migrations
 
-The 14 SQL files in `supabase/migrations/` (numbered `0001`–`0009`, `0011`–`0016`) define the entire schema — tables, RLS policies, triggers, storage buckets, seeded lookups, the `access_level` model, passwords vault, manuals/guides, and suppliers.
+The 15 SQL files in `supabase/migrations/` (numbered `0001`–`0009`, `0011`–`0017`) define the entire schema — tables, RLS policies, triggers, storage buckets, seeded lookups, the `access_level` model, passwords vault, manuals/guides, suppliers, and the AI-usage + diagnostics tables (`0017`).
 
 If you're picking this up fresh and the project doesn't have them applied yet, use the Supabase MCP `apply_migration` tool or run them via the SQL editor in order.
 
@@ -162,6 +163,19 @@ flipside-ops/
 4. Site settings → Environment variables: add every var from `.env.local`, but set `NEXT_PUBLIC_APP_URL` to the live Netlify URL.
 5. Trigger a deploy.
 6. Once live, add the Netlify URL to Supabase's Site URL + Redirect URL allowlist.
+
+---
+
+## AI features (import + diagnostics)
+
+The Excel/CSV import wizard and `/admin/diagnostics` page use Claude (Anthropic). Both are admin-only and degrade gracefully if `ANTHROPIC_API_KEY` is unset.
+
+- **Import wizard.** Visible as an "Import" button on `/passwords`, `/clients`, `/suppliers` for admins. Steps: upload → AI proposes column mapping → admin resolves lookups → preview → commit. Passwords have a hard privacy boundary: `username`, `password`, `further_info` are stripped before any AI request.
+- **Diagnostics scan.** `/admin/diagnostics` lets admins run an AI scan over clients or suppliers to surface likely duplicates, missing fields, and anomalies. Passwords are excluded from the scanner. Hard cap of ~$0.20 worth of tokens per scan.
+- **Inline "Suggest" buttons.** On client / supplier detail pages, when `type_id` or `status_id` is empty, admins see a small "Suggest with AI" button that proposes a value with reasoning.
+- **AI usage log.** Every Claude call is logged to `ai_usage_log` (model, tokens, cost, user) and surfaced at the top of `/admin/audit`.
+
+Smoke scripts: `npm run smoke:ai`, `npm run smoke:import`, `npm run smoke:diagnostics` — each makes real Anthropic API calls (a few cents per run).
 
 ---
 

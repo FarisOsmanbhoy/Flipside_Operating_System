@@ -1,6 +1,7 @@
-import { getSession } from "@/lib/auth";
+import { getSession, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ImportButton } from "@/components/import/ImportButton";
 import { PasswordsListClient } from "./PasswordsListClient";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +40,7 @@ export default async function PasswordsPage({
       <PageHeader
         title="Passwords"
         subtitle="Shared logins for the tools the team uses. Anyone can view; managers and admins can edit."
+        actions={isAdmin(session) ? <ImportButton domain="passwords" /> : null}
       />
       <PasswordsListClient
         session={session}

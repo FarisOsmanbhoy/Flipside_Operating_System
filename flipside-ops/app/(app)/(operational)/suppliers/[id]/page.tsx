@@ -12,6 +12,7 @@ import { SupplierImportantInfoBox } from "@/components/suppliers/SupplierImporta
 import { SupplierSectionBodyEditor } from "@/components/suppliers/SupplierSectionBodyEditor";
 import { SupplierContactsSection } from "@/components/suppliers/SupplierContactsSection";
 import { SupplierAssignedPMPicker } from "@/components/suppliers/SupplierAssignedPMPicker";
+import { SuggestFieldButton } from "@/components/import/SuggestFieldButton";
 import { timeAgo, shortDate } from "@/lib/format";
 import type {
   SupplierSectionType,
@@ -121,6 +122,22 @@ export default async function SupplierDetailPage({
               </Pill>
             )}
             {type?.name && <Pill tone="info">{type.name}</Pill>}
+            {!type?.name && isAdmin(profile) && (
+              <SuggestFieldButton
+                domain="suppliers"
+                entityId={supplier.id}
+                dbColumn="type_id"
+                fieldLabel="type"
+              />
+            )}
+            {!status?.name && isAdmin(profile) && (
+              <SuggestFieldButton
+                domain="suppliers"
+                entityId={supplier.id}
+                dbColumn="status_id"
+                fieldLabel="status"
+              />
+            )}
             {supplier.location && (
               <span className="inline-flex items-center gap-1 text-sm text-muted">
                 <MapPin size={14} /> {supplier.location}

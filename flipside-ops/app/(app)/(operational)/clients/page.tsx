@@ -1,6 +1,7 @@
-import { canManage, getSession } from "@/lib/auth";
+import { canManage, getSession, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ImportButton } from "@/components/import/ImportButton";
 import { ClientsListClient } from "@/components/clients/ClientsListClient";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export default async function ClientsPage({
       <PageHeader
         title="Clients"
         subtitle={`${filtered.length} of ${clients?.length ?? 0}`}
+        actions={isAdmin(profile) ? <ImportButton domain="clients" /> : null}
       />
 
       <ClientsListClient

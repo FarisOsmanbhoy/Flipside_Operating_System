@@ -14,6 +14,7 @@ import { SectionBodyEditor } from "@/components/clients/SectionBodyEditor";
 import { ContactsSection } from "@/components/clients/ContactsSection";
 import { SubcontractorsSection } from "@/components/clients/SubcontractorsSection";
 import { AssignedPMPicker } from "@/components/clients/AssignedPMPicker";
+import { SuggestFieldButton } from "@/components/import/SuggestFieldButton";
 import { timeAgo, shortDate } from "@/lib/format";
 import type {
   ClientSectionType,
@@ -140,6 +141,22 @@ export default async function ClientDetailPage({
               </Pill>
             )}
             {type?.name && <Pill tone="info">{type.name}</Pill>}
+            {!type?.name && isAdmin(profile) && (
+              <SuggestFieldButton
+                domain="clients"
+                entityId={client.id}
+                dbColumn="type_id"
+                fieldLabel="type"
+              />
+            )}
+            {!status?.name && isAdmin(profile) && (
+              <SuggestFieldButton
+                domain="clients"
+                entityId={client.id}
+                dbColumn="status_id"
+                fieldLabel="status"
+              />
+            )}
             {client.location && (
               <span className="inline-flex items-center gap-1 text-sm text-muted">
                 <MapPin size={14} /> {client.location}
