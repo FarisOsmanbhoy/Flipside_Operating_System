@@ -5,7 +5,7 @@ import { Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 
-import { ImportWizard } from "./ImportWizard";
+import { ImportChat } from "./ImportChat";
 import type { ImportDomain } from "@/lib/import/schemas";
 
 export function ImportButton({
@@ -28,7 +28,7 @@ export function ImportButton({
         <Upload size={16} /> {label}
       </Button>
       {open && (
-        <ImportWizard
+        <ImportChat
           domain={domain}
           open={open}
           onClose={() => setOpen(false)}

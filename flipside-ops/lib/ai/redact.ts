@@ -88,3 +88,46 @@ export function redactRows<T extends Record<string, unknown>>(
 ): T[] {
   return rows.map((r) => redactRow(r, scope));
 }
+
+// ─── Mapping-aware redaction ──────────────────────────────────────────────
+//
+// The chat flow knows which excel header maps to which DB column. Once a
+// mapping is known we should redact that excel header even if its name
+// doesn't match the heuristic patterns ("Misc" -> password, etc.).
+
+const SECRET_DB_COLUMNS_BY_SCOPE: Record<RedactScope, string[]> = {
+  passwords: ["password", "username", "further_info"],
+  clients: [],
+  suppliers: [],
+};
+
+export function redactRowsForChat<T extends Record<string, unknown>>(args: {
+  rows: T[];
+  scope: RedactScope;
+  // excelHeader -> dbColumn. Any header mapped to a secret dbColumn for the
+  // scope is redacted, on top of the pattern-based fallback.
+  mappings?: Record<string, string>;
+}): T[] {
+  const { rows, scope, mappings = {} } = args;
+  const secretDbCols = new Set(SECRET_DB_COLUMNS_BY_SCOPE[scope]);
+  const knownSecretHeaders = new Set(
+    Object.entries(mappings)
+      .filter(([, db]) => secretDbCols.has(db))
+      .map(([excel]) => excel),
+  );
+
+  return rows.map((row) => {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(row)) {
+      const isMappedSecret = knownSecretHeaders.has(k);
+      const isPatternSecret = isSecretHeader(k);
+      const isPasswordSemi = scope === "passwords" && isSemiSensitiveHeader(k);
+      if (isMappedSecret || isPatternSecret || isPasswordSemi) {
+        out[k] = placeholder(v);
+      } else {
+        out[k] = v;
+      }
+    }
+    return out as T;
+  });
+}

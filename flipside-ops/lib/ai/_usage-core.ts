@@ -6,8 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { ModelId } from "./models";
 
 export type UsageEndpoint =
-  | "import.map"
-  | "import.clarify"
+  | "import.chat"
   | "cleanup.suggest"
   | "diagnostics.scan"
   | "smoke";
