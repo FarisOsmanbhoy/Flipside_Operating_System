@@ -29,7 +29,7 @@ Fill from the [Supabase dashboard → Project Settings → API](https://supabase
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | "anon public" key |
 | `SUPABASE_SERVICE_ROLE_KEY` | "service_role secret" key (server-only) |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` for dev, deploy URL in prod |
-| `ANTHROPIC_API_KEY` | Anthropic Console → API keys. Powers the AI-assisted import wizard and `/admin/diagnostics`. Leave blank to disable AI; imports still work with manual column mapping. |
+| `ANTHROPIC_API_KEY` | Anthropic Console → API keys. Powers the AI-driven import chat workspace and `/admin/diagnostics`. Required — the chat importer can't start its first turn without it. |
 
 Sentry vars are optional — leave blank to skip error monitoring locally.
 
@@ -146,8 +146,10 @@ flipside-ops/
 ├── proxy.ts                          ← Next 16 proxy (session refresh)
 ├── instrumentation.ts                ← Sentry init
 ├── sentry.{client,server,edge}.config.ts
-├── scripts/smoke-admin.ts            ← invite smoke test (run with tsx)
-├── supabase/migrations/              ← 0001..0009, 0011..0016 — apply in order
+├── scripts/                          ← smoke-admin (invites), smoke-ai (Anthropic round-trip),
+│                                       smoke-import (parser + applyPlan + chat turn),
+│                                       smoke-diagnostics (scanner). Run with `npm run smoke:*`.
+├── supabase/migrations/              ← 0001..0009, 0011..0017 — apply in order
 └── public/brand/
 ```
 
@@ -156,6 +158,8 @@ flipside-ops/
 ---
 
 ## Deploy (Netlify)
+
+> **Production is already live at [`https://fsops.netlify.app`](https://fsops.netlify.app)** (Netlify project `fsops`, branch `main`). Pushing to `main` auto-deploys via `@netlify/plugin-nextjs`. The steps below are for setting up a fresh Netlify project from scratch — if you're just shipping a change to the existing one, skip them.
 
 1. Push the repo to GitHub.
 2. In Netlify, "Add new site → Import from Git" → select the repo.
@@ -168,9 +172,12 @@ flipside-ops/
 
 ## AI features (import + diagnostics)
 
-The Excel/CSV import wizard and `/admin/diagnostics` page use Claude (Anthropic). Both are admin-only and degrade gracefully if `ANTHROPIC_API_KEY` is unset.
+The Excel/CSV import chat and `/admin/diagnostics` page use Claude (Anthropic). Both are admin-only. Diagnostics degrades gracefully if `ANTHROPIC_API_KEY` is unset; the import chat needs it for the first turn.
 
-- **Import wizard.** Visible as an "Import" button on `/passwords`, `/clients`, `/suppliers` for admins. Steps: upload → AI proposes column mapping → admin resolves lookups → preview → commit. Passwords have a hard privacy boundary: `username`, `password`, `further_info` are stripped before any AI request.
+- **Import chat workspace.** "Import" button on `/passwords`, `/clients`, `/suppliers` for admins. Opens a split-pane modal: chat on the left, tabbed live preview on the right. The AI parses the sheet, proposes mappings, sets defaults for missing required fields, resolves lookups, and surfaces every assumption as a per-cell warning. The user corrects in plain English ("default status to Active", "uppercase emails"). **The Import button is always enabled** — it says "Import 47 rows (3 need attention)" rather than blocking. Passwords have a hard privacy boundary: `username`, `password`, `further_info` are stripped before any AI request (both by header pattern and once a mapping is known).
+- **Cross-domain awareness.** If a sheet uploaded to one domain contains data shaped like another (3+ matching columns), the AI proposes adding it as a new preview tab. User accepts in chat; the commit then inserts targets in dependency order with FK columns auto-wired (e.g. `passwords.client_id ← clients.name`). Pseudo-transactional — Supabase JS has no client-side transaction API, so partial failures trigger a best-effort rollback of the UUIDs already inserted.
+- **Cost cap.** $0.20 per chat session, shown as a progress bar under the chat input. When hit, the current turn finishes and further turns are refused with a clear message.
+- **Audit.** Every inserted row plus the full chat transcript is recorded — `/admin/audit` shows both. Useful for debugging "why did this row get this value".
 - **Diagnostics scan.** `/admin/diagnostics` lets admins run an AI scan over clients or suppliers to surface likely duplicates, missing fields, and anomalies. Passwords are excluded from the scanner. Hard cap of ~$0.20 worth of tokens per scan.
 - **Inline "Suggest" buttons.** On client / supplier detail pages, when `type_id` or `status_id` is empty, admins see a small "Suggest with AI" button that proposes a value with reasoning.
 - **AI usage log.** Every Claude call is logged to `ai_usage_log` (model, tokens, cost, user) and surfaced at the top of `/admin/audit`.

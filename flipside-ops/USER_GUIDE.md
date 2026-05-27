@@ -11,6 +11,8 @@ A handbook for everyone who uses the FlipSide internal operations tool.
 
 ## Welcome
 
+The live site is at **[`https://fsops.netlify.app`](https://fsops.netlify.app)** — bookmark it. Everything in this guide is relative to that base URL (paths like `/clients` or `/admin/users` map to `https://fsops.netlify.app/clients`, etc.).
+
 FlipSide Ops is the internal source of truth for FlipSide Specialties. It holds:
 
 - **Staff directory** — every team member's profile, contact details, department
@@ -40,10 +42,12 @@ The UI hides buttons and menus you can't use — but the database enforces this 
 
 ### First sign-in
 
-You'll receive an invite email from FlipSide Ops with a link. Two ways to sign in:
+Go to **[`https://fsops.netlify.app`](https://fsops.netlify.app)** — you'll be redirected to the login screen.
+
+You'll have received an invite email from FlipSide Ops with a link. Two ways to sign in:
 
 1. **Magic link** (no password needed) — click the link in the email; it'll log you straight in.
-2. **Password** — go to `/login`, enter your email + password.
+2. **Password** — at `https://fsops.netlify.app/login`, enter your email + password.
 
 > _Screenshot: login screen with brand gradient background, email + password fields, "Send magic link" button._
 
@@ -102,6 +106,7 @@ The horizontal bar at the top of every page has four groups. Click a group label
   - Passwords (`/passwords`)
   - Manuals & Guides (`/manuals`)
   - Audit Log (`/admin/audit`) — *admin only*
+  - AI Diagnostics (`/admin/diagnostics`) — *admin only*
   - Users (`/admin/users`) — *admin only*
   - Config (`/admin/config`) — *admin only*
   - Reports, Suggestions & Feedback, Training — *coming soon*
@@ -151,9 +156,21 @@ On screens narrower than ~1280px (`xl`), the right pane becomes a slideover that
 2. The list page works exactly the same as Staff: filter left, select a row, details in the right pane.
 3. Click into a client to see the full page: **Important info** box, **Sections** (notes / docs / contracts / whatever your admins have configured), **Contacts**, **Subcontractors** (clients only).
 
+> Admins can bulk-load clients or suppliers via the **Import** button at the top of each list page — see [Import from Excel (AI-assisted)](#import-from-excel-ai-assisted).
+
 > _Screenshot: full client detail page with sections accordion + contacts + subcontractors._
 
 > Suppliers work identically to clients except they have **no Subcontractors** section.
+
+### Suggest with AI (admin only)
+
+On any client or supplier detail page, when **Type** or **Status** is blank, admins see a small **Suggest with AI** button next to the field.
+
+1. Click it — the AI looks at the rest of the record (name, location, notes, important info) and proposes a value with one-sentence reasoning.
+2. Click **Accept** to write the suggestion through. The field is set and the change goes to the audit log.
+3. Dismiss the suggestion if it doesn't fit — nothing is saved.
+
+Passwords are never sent to the AI; this button doesn't appear on the password vault.
 
 ### Create a task or notice
 
@@ -188,6 +205,8 @@ If you don't have edit rights on a client (i.e. you're a Level 1 Editor), use th
 3. Fill in: **label**, **category** (pick from the dropdown — admins manage this list at `/admin/config`), **username**, **password**, optional URL and notes.
 4. **Save**. The entry appears in the table for everyone with vault access.
 5. To copy a password, click the copy icon in the row — it goes straight to your clipboard.
+
+> Admins can also use the **Import** button at the top of `/passwords` to bring in many rows from a spreadsheet — see [Import from Excel (AI-assisted)](#import-from-excel-ai-assisted) below.
 
 ### Browse manuals & guides
 
@@ -224,7 +243,7 @@ This section assumes you're signed in as a Level 3 admin and the **Administratio
 
 If the invite button shows an error:
 
-- Check that `NEXT_PUBLIC_APP_URL` matches the live Netlify URL (a mismatch breaks the redirect)
+- Check that `NEXT_PUBLIC_APP_URL` on the `fsops` Netlify project is `https://fsops.netlify.app` (not localhost, not a stale value) — a mismatch breaks the redirect
 - Confirm the email's Supabase Auth quota hasn't been hit (default provider has a low rate limit — see the README about swapping to Resend)
 - Run the smoke script for a clean diagnosis:
 
@@ -287,13 +306,101 @@ Categories you can edit:
 
 To add an entry: click the tab → **+ Add** → fill in label + sort order → **Save**.
 
+## Import from Excel (AI-assisted)
+
+The **Import** button at the top of `/passwords`, `/clients`, and `/suppliers` (admins only) opens an AI-driven chat workspace that lands spreadsheet data into the right tables. It accepts sheets of **any shape** — the AI works out the mapping, fills in gaps, and you correct anything wrong in plain English. There is no rigid step-by-step wizard and no dead-ends; the **Import** button is always enabled.
+
+### What to upload
+
+- `.xlsx` or `.csv`
+- Max 2 MB, max 1,000 rows
+- First sheet only; first row is treated as headers
+- Headers can be named anything — the AI matches them to the right DB columns
+
+### The chat workspace
+
+> _Screenshot: Import modal — chat pane on the left with AI's opening message, tabbed preview on the right showing the first dozen rows with badge markers._
+
+After you pick a file the AI parses it and posts its first message in the chat:
+> "I mapped 4 of 5 columns. Your sheet has no 'status' column — I defaulted all 47 rows to **Active**. I also spotted 12 rows that look like client data — import those too?"
+
+The right pane shows the **live preview** of what will be inserted, updating as you give feedback. Examples of corrections you can type:
+
+- "default status to **Dormant** instead"
+- "uppercase all the emails"
+- "skip the rows where department is blank"
+- "the column called 'Type' is the supplier type, not the client type"
+
+Each reply causes the AI to update the plan; the preview re-renders. There's no commit until you click **Import**.
+
+### Visual cues in the preview
+
+- **Amber cell with a sparkle icon** — the AI assumed this value (a default, a transform, or a fuzzy-matched lookup). Hover to see the reasoning.
+- **Red cell with a warning icon** — needs your attention (a required field with no value, or an unresolved lookup). The row is highlighted red. You can still import — the bad rows just won't insert.
+- **`+ new Foo`** — an existing lookup row didn't match this value; a new one will be created on import.
+
+### Cross-domain imports
+
+When the AI notices columns that don't belong to the current domain but match another (e.g. a passwords sheet that also has client name / location / PM), it surfaces a **proposal banner** in the chat:
+
+> "Add Clients tab? I see 12 rows of client data in this sheet."
+
+Click **Yes, add it**. A new preview tab appears alongside the primary one. Both tabs commit together in one click — the parent rows (clients) insert first, child rows (passwords) reference the new client UUIDs automatically via the `client_id` foreign key.
+
+> _Screenshot: cross-domain workspace with two preview tabs (Passwords 47 / Clients 12) and an inline proposal banner in the chat._
+
+### Importing
+
+- The button at the bottom of the preview reads **"Import N rows"** when everything is clean, or **"Import 44 rows (3 need attention)"** when some rows have validation issues.
+- Clicking it imports every valid row and shows a summary. Rows that failed validation are listed so you can fix them and re-import a smaller sheet.
+- All inserted rows + the chat transcript are written to `/admin/audit`, so it's always reconstructable later.
+
+### Cost cap
+
+Every chat session has a hard cap of **$0.20** in Claude tokens, shown as a progress bar under the chat input. If you hit it, the current AI reply still finishes — further turns are refused with a clear message. The cap exists to prevent a runaway conversation; for a normal import you'll use a few cents.
+
+### Privacy
+
+Password vault secrets (`username`, `password`, `further_info`) are stripped on the server **before** anything leaves for the AI. The AI sees the column header but not the value. This applies both to obvious header names (e.g. "Password") and to whatever header the user has mapped to a secret column ("Misc" → password).
+
+## Run an AI diagnostics scan
+
+`/admin/diagnostics` (Level 3 only) is an AI-powered data-quality scanner. It looks across clients or suppliers for likely problems — duplicate records, blank-but-important fields, and other anomalies — and writes findings to a list you can work through.
+
+> _Screenshot: `/admin/diagnostics` showing the scan trigger, severity filter, and a list of findings._
+
+### What it scans
+
+- **Clients** and **suppliers** only. Passwords are deliberately excluded from the scanner.
+- Each finding is labelled with a severity (info / warn / error) and a short reason.
+
+### How to run
+
+1. Open `/admin/diagnostics`.
+2. Pick a domain (Clients or Suppliers).
+3. Click **Run scan**. Results stream in as the AI processes the records.
+
+Each run has a **hard cost cap of $0.20** — when the cap is hit, the scan stops and you see what was found up to that point.
+
+### Working through findings
+
+- Findings are deduped by a unique-open-finding constraint: if you re-scan, anything you already flagged as Resolved or Dismissed won't reappear, and anything still open just stays as-is rather than piling up duplicates.
+- Each finding has inline **Resolved** / **Dismissed** buttons.
+- Treat the open list as a data-quality backlog: pair each one with an edit on the affected client/supplier page.
+
 ## Review the audit log
 
 `/admin/audit` (Level 3) shows every audited change: who, what table, what changed, when. Use the filter sidebar to narrow by table or actor.
 
-> _Screenshot: audit log table with filter sidebar._
+> _Screenshot: audit log table with filter sidebar, AI usage card pinned at the top._
 
 Audit entries are written automatically by DB triggers (migration `0007`). New tables that should be audited need a `trg_audit_<table>` trigger — see migration files for the pattern.
+
+### AI usage card
+
+Pinned at the top of `/admin/audit` is an **AI usage** card showing the totals (input/output tokens, total cost in USD) and the most recent ten Claude calls — per call: when, who triggered it, which endpoint (`import.chat` / `diagnostics.scan` / `cleanup.suggest`), the model, and the cost. Use this to monitor spend and spot runaway usage at a glance.
+
+Import chat sessions show up as `import.chat` rows; the full chat transcript is captured alongside the inserted rows so a bad import is reconstructable later.
 
 ## Hand off bootstrap admin to a new owner
 
@@ -309,6 +416,9 @@ Bootstrap email logic only matters for the *very first* sign-in. After that, lev
 
 - **Access level** — integer 1/2/3 on every profile, controlling what they can see and edit.
 - **Admin (Level 3)** — full access including `/admin/*` and PM reassignment.
+- **AI Diagnostics** — admin-only scanner at `/admin/diagnostics` that surfaces duplicates, missing fields, and anomalies in clients and suppliers. $0.20 cap per scan; passwords excluded.
+- **AI import chat** — chat-driven importer at the top of `/passwords`, `/clients`, `/suppliers` list pages (admin only). AI proposes a mapping, fills in gaps, you correct in plain English. Never blocks — required fields get a default + a warning marker; the **Import** button is always live. See [Import from Excel (AI-assisted)](#import-from-excel-ai-assisted).
+- **AI usage log** — running total of Anthropic spend per user / endpoint; surfaced as a card pinned at the top of `/admin/audit`.
 - **Assigned PM** — the staff member responsible for a client or supplier; only Level 3 can change this.
 - **Audit entry** — automatic log row written when a tracked field changes; viewable at `/admin/audit`.
 - **Change request** — a Level 1 user asking for an edit they don't have rights to make. Creates a task routed to admins / the assigned PM.
@@ -319,6 +429,7 @@ Bootstrap email logic only matters for the *very first* sign-in. After that, lev
 - **Recurring template** — a task that spawns instances on a schedule (scheduler not yet wired — see NEXT_STEPS).
 - **Section** — a labelled chunk of a client/supplier record (notes, contracts, docs, …); the type list is admin-configurable.
 - **Subcontractor** — a child company under a client (clients only — suppliers don't have these).
+- **Suggest with AI** — inline button on client / supplier detail pages that proposes a value for an empty **Type** or **Status** field with reasoning. Admin only; opt-in (you click Accept to write through).
 - **Three-pane layout** — the filters / table / context-panel layout used on all list pages.
 
 ---

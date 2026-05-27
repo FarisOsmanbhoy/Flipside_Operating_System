@@ -5,7 +5,7 @@ Claude session can pick up exactly where the previous one left off.
 
 **Project root:** `C:\Users\osman\Documents\2. Projects\Flipside\FLIPSIDE OPERATING SYSTEM\flipside-ops`
 **Supabase project ref:** `ztikdgsygcisalbnqpjh`
-**GitHub repo (public):** `https://github.com/FarisOsmanbhoy/Flipside_Operating_System` — `main` at commit `22d12c3`
+**GitHub repo (public):** `https://github.com/FarisOsmanbhoy/Flipside_Operating_System` — `main` at commit `36b942f`
 **Bootstrap admin email** (auto-seeded on first sign-in): `farisosmanbhoy01@gmail.com`
 **Spec source of truth:** Notion page "FlipSide Internal Ops Tool — Design Spec (v1)" (id `36486ce8-4d64-811f-9056-c8f072052e01`)
 
@@ -15,7 +15,7 @@ Claude session can pick up exactly where the previous one left off.
 
 - Scaffolded Next.js 16 + Tailwind v4 + TypeScript at `flipside-ops/` (30+ routes)
 - Brand theme: teal `#005470` primary, lime `#c2d500` accent, DM Sans + Josefin Sans
-- 14 Supabase migrations on disk (`0001`..`0009`, `0011_access_levels`, `0012_revoke_anon_from_auth_helpers`, `0013_profile_fields_expansion`, `0014_password_metadata`, `0015_passwords_and_manuals`, `0016_suppliers`); all applied live to `ztikdgsygcisalbnqpjh`
+- 15 Supabase migrations on disk (`0001`..`0009`, `0011_access_levels`, `0012_revoke_anon_from_auth_helpers`, `0013_profile_fields_expansion`, `0014_password_metadata`, `0015_passwords_and_manuals`, `0016_suppliers`, `0017_ai_assist`); all applied live to `ztikdgsygcisalbnqpjh`
 - Auth flow: login (password + magic link), forgot, reset, callback
 - App shell: TopHeader with universal search (Ctrl+K) + notifications popover + avatar dropdown; MainNav with click-toggle dropdowns + mobile hamburger
 - All 3 v1 modules: Staff, Clients (sections + contacts + subs + request-change + approval queue), Tasks (tabs + new + detail + comments + recurring conversion)
@@ -25,6 +25,7 @@ Claude session can pick up exactly where the previous one left off.
 - `npm run build` passes cleanly; `tsc --noEmit` clean
 - Sentry instrumentation wired in `instrumentation.ts` + `sentry.{client,server,edge}.config.ts` (no-op until DSN set)
 - `.env.local` populated; `netlify.toml` at repo root
+- **Netlify deploy + MCP**: project `fsops` (site id `5bef33e3-f276-47cd-ab2c-a6451ac01107`) live at [`https://fsops.netlify.app`](https://fsops.netlify.app); branch deploy at `https://main--fsops.netlify.app`. Netlify MCP authenticated and used for env-var management (e.g. `SUPABASE_SERVICE_ROLE_KEY` set via commit `e2e5cb8`); pushes to `main` auto-deploy.
 - README rewritten with setup walkthrough + admin handoff docs
 - Logo + favicon at `public/brand/`
 - **PROPS three-pane redesign** (teal + lime preserved):
@@ -58,57 +59,58 @@ Claude session can pick up exactly where the previous one left off.
 - **Suppliers domain + level-3 PM reassignment + change-requests as tasks** (`7cd3656`): new `/suppliers` parallel to `/clients` (migration `0016`, no sub-suppliers); only Level 3 can reassign a client/supplier's assigned PM; change requests now flow through Tasks instead of a standalone list page.
 - **Admin invite diagnostics + smoke script** (`22d12c3`): invite button renamed; failure modes logged with actionable messages; `scripts/smoke-admin.ts` added (run with `npx tsx scripts/smoke-admin.ts`).
 
+### Since `22d12c3` (admin invite diagnostics)
+
+- **Portal Modal to `document.body`** (`c3be34e`): overlay now covers sticky siblings instead of being clipped by a sticky ancestor.
+- **Ops deploy chores** (`edfc42c`, `e2e5cb8`, `bdb7e3f`): set `SUPABASE_SERVICE_ROLE_KEY` as a non-secret env on the `fsops` Netlify site and added runtime env-check logging in the admin invite path so missing keys produce an actionable error instead of a generic 500.
+- **AI-assisted Excel import + diagnostics** (`fe2a8bd`): first cut — migration `0017_ai_assist` adds `ai_usage_log` + `ai_diagnostics`; `lib/ai/` wraps the Anthropic SDK with a server-only guard, Zod-validated structured outputs, and per-call usage logging; `/admin/diagnostics` runs a $0.20-capped scan over clients/suppliers; inline "Suggest with AI" buttons on detail pages for empty `type_id` / `status_id`. Three smoke scripts: `smoke-ai`, `smoke-import`, `smoke-diagnostics`.
+- **Chat-driven import workspace** (`36b942f`): replaces the gated 5-step `ImportWizard` with a single chat-driven modal — split chat on the left, tabbed live preview on the right. AI is the driver now, not a one-shot suggester: it makes assumptions, surfaces them as per-cell badges, the user corrects in plain English ("default status to Active"), nothing blocks the user (missing required fields get defaults + warnings). New foundation: `lib/import/planState.ts` (Zod schemas), `lib/import/applyPlan.ts` (pure resolver), `lib/import/crossDomainCommit.ts` (topo-sort + FK wiring + best-effort rollback). Cross-domain awareness: AI spots data shaped like another domain, proposes a new preview tab, and on commit inserts targets in dependency order with FKs auto-wired. `$0.20` per-session cost cap shared with diagnostics; full chat transcript recorded in `/admin/audit`. Removed: `ImportWizard.tsx`, `mapColumns.ts`, `clarifyMapping.ts`.
+
 ---
 
 ## ⏳ Pending — in priority order
 
-### 1. Connect Netlify (BLOCKER for production)
-The Netlify MCP OAuth flow was started but not completed. To finish:
-- Have Claude run `mcp__netlify__authenticate` to emit a fresh OAuth URL, OR
-- Use the Netlify dashboard directly: "Add new site → Import from Git" → select `FarisOsmanbhoy/Flipside_Operating_System`
-- `netlify.toml` already sets base directory to `flipside-ops/` and registers the Next.js plugin — auto-detect should work
-- After site is created, note the assigned `*.netlify.app` URL
+### 1. Verify Netlify environment variables on `fsops`
+The critical vars are obviously set (deploy is `ready` and admin invite works), but confirm the full set on the [`fsops` Netlify project → Site settings → Environment variables](https://app.netlify.com/projects/fsops):
+- `NEXT_PUBLIC_SUPABASE_URL` — confirmed (admin invite reads it)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — confirmed (client auth works)
+- `SUPABASE_SERVICE_ROLE_KEY` — confirmed (set via commit `e2e5cb8`)
+- `NEXT_PUBLIC_APP_URL` — should be `https://fsops.netlify.app`, NOT localhost
+- `ANTHROPIC_API_KEY` — required for the AI import chat + `/admin/diagnostics` + Suggest-with-AI; may not be set yet
+- Sentry / Resend vars — optional; leave blank until those are wired
 
-### 2. Configure Netlify environment variables (BLOCKED by #1)
-In Site settings → Environment variables, add everything from `.env.local`:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_APP_URL` — set to the Netlify URL (NOT localhost)
-
-Leave Sentry / Resend vars blank for now.
-
-### 3. Configure Supabase Auth dashboard (BLOCKED by #1)
+### 2. Confirm Supabase Auth dashboard config
 At [Authentication → URL Configuration](https://supabase.com/dashboard/project/ztikdgsygcisalbnqpjh/auth/url-configuration):
-- **Site URL**: `https://<your-site>.netlify.app`
-- **Redirect URLs**: add both
+- **Site URL** should be `https://fsops.netlify.app`
+- **Redirect URLs** should include:
   - `http://localhost:3000/**` (for local dev)
-  - `https://<your-site>.netlify.app/**` (for prod)
-  - any Netlify deploy preview pattern if you'll use PR previews
+  - `https://fsops.netlify.app/**` (for prod)
+  - any Netlify deploy preview pattern if you use PR previews
 
 At [Authentication → Providers](https://supabase.com/dashboard/project/ztikdgsygcisalbnqpjh/auth/providers):
 - Confirm **Email** provider is enabled (magic link + password)
 
-### 4. First sign-in + smoke test (BLOCKED by #1–#3)
-Once the site is live:
-- Visit `https://<your-site>.netlify.app` → redirected to `/login`
-- Sign in via magic link to `farisosmanbhoy01@gmail.com`
-- `handle_new_auth_user` trigger creates a profile at `access_level = 3`
-- Land on `/` dashboard
+If sign-in works against `fsops.netlify.app`, this is already configured.
 
-Verify each module:
-- `/admin/users` — invite a second test user at **Level 1 (Editor)**; sign in incognito
-- `/clients/new` — create a test client; edit Important info; add a contact + subcontractor
-- As Level 1: open the client, confirm no edit buttons, file a request change
-- As Level 3: find the auto-created change-request task at `/tasks` (filter by Type = Change request), action it, mark Done; verify audit log entry at `/admin/audit`
-- `/tasks/new` — create a task assigned to yourself; verify it appears on `/` dashboard
-- Universal search (Ctrl+K): type a client name → result appears → clicking navigates
-- Notifications bell: assign yourself a task due soon → unread badge → popover lists it
-- Top-nav dropdowns (Company / Administration / Operational) open on click and close on outside-click / Esc / route change
-- Form `<Select>` controls show a visible chevron caret
-- At `xl` viewport: row click on Staff/Clients/Tasks updates the right-hand context panel; below `xl` the right pane is a slideover
+### 3. Live-site smoke test (use the deployed site)
+Walk through these on `https://fsops.netlify.app` as needed:
+- Visit `https://fsops.netlify.app` → redirected to `/login`
+- Sign in via magic link as `farisosmanbhoy01@gmail.com` (bootstrap admin, level 3)
+- Verify each module:
+  - `/admin/users` — invite a second test user at **Level 1 (Editor)**; sign in incognito
+  - `/clients/new` — create a test client; edit Important info; add a contact + subcontractor
+  - As Level 1: open the client, confirm no edit buttons, file a request change
+  - As Level 3: find the auto-created change-request task at `/tasks` (filter by Type = Change request), action it, mark Done; verify audit log entry at `/admin/audit`
+  - `/tasks/new` — create a task assigned to yourself; verify it appears on `/` dashboard
+  - `/passwords` and `/clients`: click the **Import** button, drop an Excel sheet, walk the chat workspace through a mapping correction, commit; confirm audit log shows the chat transcript
+  - `/admin/diagnostics`: run a scan over clients; confirm findings appear and dedupe on a second scan
+  - Universal search (Ctrl+K): type a client name → result appears → clicking navigates
+  - Notifications bell: assign yourself a task due soon → unread badge → popover lists it
+  - Top-nav dropdowns (Company / Administration / Operational) open on click and close on outside-click / Esc / route change
+  - Form `<Select>` controls show a visible chevron caret
+  - At `xl` viewport: row click on Staff/Clients/Tasks updates the right-hand context panel; below `xl` the right pane is a slideover
 
-### 5. Move auth helpers out of `public` to clear advisor warnings
+### 4. Move auth helpers out of `public` to clear advisor warnings
 Three remaining `WARN`s flag that `is_admin()`, `is_manager_or_admin()`, `auth_level()` are SECURITY DEFINER in `public`, so PostgREST exposes them at `/rest/v1/rpc/...` for `authenticated`. They only read the caller's own profile, so risk is low — but the clean fix is:
 - Create a new `auth_internal` schema
 - Recreate the four helpers in `auth_internal` instead of `public`
@@ -117,7 +119,7 @@ Three remaining `WARN`s flag that `is_admin()`, `is_manager_or_admin()`, `auth_l
 
 This needs careful sequencing (alter policies before dropping functions, or drop policies + recreate). Plan as a single migration.
 
-### 6. Finish the remaining stub pages
+### 5. Finish the remaining stub pages
 These still render an `EmptyState` (verified at HEAD):
 - **`/company/profile`** — needs a `company_profile` table + editable form
 - **`/admin/reports`** — saved queries / scheduled exports; no DB or API yet
@@ -126,7 +128,7 @@ These still render an `EmptyState` (verified at HEAD):
 - **Dashboard "Polls" card** — `ComingSoonCard` with no backing route or table
 - **Dynamic breadcrumb labels** — show truncated UUIDs for `/clients/[id]` / `/suppliers/[id]` / `/tasks/[id]`; needs server-rendered or context-fed labels
 
-### 7. (Optional) Wire Sentry DSN
+### 6. (Optional) Wire Sentry DSN
 - Create a Sentry account + project for Node.js / Next.js
 - Copy the DSN
 - Add to `.env.local` and Netlify env:
@@ -140,8 +142,8 @@ These still render an `EmptyState` (verified at HEAD):
 
 ## 🔑 Pending auths / external setup
 
-- **Netlify MCP** — still not connected (see Pending #1). `netlify.toml` is unchanged; the build is green; the site will deploy as-is once Netlify is hooked up.
-- **Supabase MCP** — connected and used during scaffolding, the redesign, AND the access-level migration. Database is in sync with on-disk migrations through `0012`.
+- **Netlify MCP** — connected. Used for env-var management on `fsops` (e.g. `SUPABASE_SERVICE_ROLE_KEY` set via commit `e2e5cb8`). `netlify.toml` unchanged; pushes to `main` auto-deploy to `fsops.netlify.app`.
+- **Supabase MCP** — connected and used during scaffolding, the redesign, the access-level migration, and the AI-assist migration. Database is in sync with on-disk migrations through `0017`.
 - **No new env vars** required since the prior commit.
 - **No new third-party services** added.
 
@@ -163,7 +165,7 @@ These still render an `EmptyState` (verified at HEAD):
 - **Higher-resolution logo**: `public/brand/logo.jpg` is a 17 KB JPG pulled from WordPress. Replace with vector / higher-res when available.
 - **Move `pg_trgm` extension** out of public schema (pre-existing advisor WARN).
 - **PR preview deploys**: Netlify supports these automatically — just add the Netlify preview URL pattern to Supabase Redirect URLs.
-- **Pre-existing lint errors**: `npx eslint .` reports 6 errors in `app/(app)/page.tsx`, `components/CommandPalette.tsx`, `components/NotificationsPopover.tsx` (React 19 `react-hooks/purity` + `set-state-in-effect`). All pre-date the redesign; cleanup pass when convenient.
+- **Pre-existing lint errors**: `npm run lint` reports 6 errors across 4 files — `app/(app)/page.tsx:127` (`react-hooks/purity` — impure call during render), `components/CommandPalette.tsx:38,56` (`set-state-in-effect`), `components/NotificationsPopover.tsx:25,40` (`set-state-in-effect`), `components/ui/Modal.tsx:21` (`set-state-in-effect`). All pre-date the AI/import work; cleanup pass when convenient.
 
 ---
 
@@ -193,6 +195,7 @@ flipside-ops/
 │   ├── tasks/                   ← TasksFilters, TasksListClient, TaskForm, CommentsThread
 │   ├── staff/                   ← StaffFilters, StaffListClient, ProfileEditForm, ChangeMyPasswordCard
 │   ├── admin/                   ← AdminUsersListClient, UserContextPanel, AuditListClient, InviteUserButton, SetPasswordButton, LookupEditor
+│   ├── import/                  ← ImportButton, ImportChat (split-pane chat workspace), PreviewTable (per-domain table w/ AI-assumption badges), SuggestFieldButton, columns.ts
 │   ├── CommandPalette.tsx, RealtimeRefresh.tsx, NotificationsPopover.tsx
 ├── lib/
 │   ├── supabase/{server,client,proxy}.ts
@@ -202,12 +205,16 @@ flipside-ops/
 │   ├── validators/              ← shared Zod schemas
 │   ├── notifications.ts         ← bell data source
 │   ├── format.ts                ← date/freshness/cn helpers
-│   └── database.types.ts        ← hand-rolled DB types (access_level / required_level)
+│   ├── database.types.ts        ← hand-rolled DB types (access_level / required_level)
+│   ├── ai/                      ← _client-core (Anthropic wrapper), client.ts (server-only guard), models.ts, redact.ts (secret stripping incl. mapping-aware), usage.ts, prompts/{importChat,scanDiagnostics,suggestField}.ts
+│   └── import/                  ← parser.ts (xlsx/csv), schemas.ts (per-domain columns + Zod row schema), planState.ts (Zod PlanState/TargetPlan/FkLink), applyPlan.ts (pure PlanState→resolved rows), resolveLookups.ts (fuzzy match), crossDomainCommit.ts (topo-sort + FK wiring), actions.ts (server actions: parse, chat turn, accept cross-domain, commit)
 ├── proxy.ts                     ← Next 16 proxy (session refresh)
 ├── instrumentation.ts           ← Sentry init entrypoint
 ├── sentry.{client,server,edge}.config.ts
-├── scripts/smoke-admin.ts       ← invite smoke test (run with `npx tsx`)
-├── supabase/migrations/         ← 0001..0009, 0011..0016 (14 files; 0010 intentionally skipped)
+├── scripts/                     ← smoke-admin (invites), smoke-ai (Anthropic round-trip),
+│                                  smoke-import (parser + applyPlan + chat turn against Sonnet),
+│                                  smoke-diagnostics (scanner). Run via `npm run smoke:*`.
+├── supabase/migrations/         ← 0001..0009, 0011..0017 (15 files; 0010 intentionally skipped)
 ├── public/brand/                ← logo.jpg, favicon.jpg
 ├── README.md                    ← engineering setup + access-level + handoff docs
 ├── USER_GUIDE.md                ← end-user handbook: navigation map + SOPs + glossary
@@ -215,7 +222,6 @@ flipside-ops/
 ```
 
 `netlify.toml` lives at the *repo* root (one level above `flipside-ops/`).
-`assets/` (also at repo root) holds the PROPS reference mockups + FlightWorx sample PDF.
 
 ## 🔑 Conventions
 
