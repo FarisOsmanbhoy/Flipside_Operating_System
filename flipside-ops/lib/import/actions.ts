@@ -108,7 +108,14 @@ export async function importChatTurn(
   const profile = await requireLevel(3);
   const parsed = ChatTurnArgsSchema.safeParse(rawArgs);
   if (!parsed.success) {
-    return { ok: false, error: "Invalid arguments to importChatTurn." };
+    const detail =
+      process.env.NODE_ENV !== "production"
+        ? ` (${parsed.error.issues
+            .map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`)
+            .slice(0, 3)
+            .join("; ")})`
+        : "";
+    return { ok: false, error: `Invalid arguments to importChatTurn.${detail}` };
   }
   const { state, userText, isFirstTurn } = parsed.data;
 

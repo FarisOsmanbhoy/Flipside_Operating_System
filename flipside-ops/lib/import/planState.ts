@@ -137,7 +137,11 @@ export const planStateSchema = z.object({
   primaryDomain: z.enum(["passwords", "clients", "suppliers"]),
   // One entry per active target. Primary always present; cross-domain targets
   // appear only after the user accepts a propose_cross_domain_target turn.
-  targets: z.record(
+  // Partial: only the primary domain is present until the user accepts a
+  // cross-domain proposal. Zod 4's `record(enum, V)` is exhaustive (requires
+  // every enum key) — `partialRecord` matches the `Partial<Record<...>>`
+  // shape the rest of the code already assumes.
+  targets: z.partialRecord(
     z.enum(["passwords", "clients", "suppliers"]),
     targetPlanSchema,
   ),

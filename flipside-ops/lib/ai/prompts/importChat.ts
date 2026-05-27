@@ -21,6 +21,7 @@ import {
   type PlanState,
 } from "@/lib/import/planState";
 import { listImportDomains, getImportSchema } from "@/lib/import/schemas";
+import { getImportKnowledgePack } from "./importKnowledge";
 
 // ─── Output schema (the model's response shape) ───────────────────────────
 
@@ -164,6 +165,9 @@ OUTPUT
 
 COST CAP
 - This chat has a hard cap of $${IMPORT_CHAT_COST_CAP_USD.toFixed(2)} USD per session. If the user keeps asking for more, finish the current turn and they'll see a cap-reached message.
+
+PRODUCT KNOWLEDGE (excerpts from the live user guide and README — treat as authoritative for behaviour, defaults policy, privacy, and access-level rules)
+${getImportKnowledgePack()}
 
 DOMAIN SCHEMAS
 ${schemaSummary}
