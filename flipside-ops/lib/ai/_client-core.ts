@@ -28,9 +28,6 @@ export class AIBadOutput extends Error {
 let _client: Anthropic | null = null;
 
 function getClient(): Anthropic {
-  console.log("[ai/client] env-check", {
-    hasAnthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
-  });
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new AIServiceUnavailable("ANTHROPIC_API_KEY not set");
   }
